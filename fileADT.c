@@ -12,13 +12,18 @@
 
 
 typedef struct line{
-    char titleType; //1 si es pelicual 0 si es serie.
+    char titleType; //1 si es pelicula 2 si es serie.
     char * primaryTitle; //el nombre de la pelicula/serie
     unsigned int startYear;// si es una película, el año. Si es una serie, en qué año comenzó a emitirse
     char **genres; //Lista de géneros separados por coma
     char* averageRating; //un número entre 0 y 10, con un decimal(ver de dejarlo en un decimal)
     unsigned int numVotes;// cantidad de votos que obtuvo
 }LineCDT;
+
+//Prototipos de funciones static
+static int whatTitleType(char*s1);
+static int allocString(char *source,char* target);
+static int allocGenres(char**m,char*s);
 
 
 
@@ -64,9 +69,11 @@ static int allocString(char *source,char* target)
     return OK;
 }
 
+//Genero una matriz donde hago que la ultima fila devuelva NULL
+//Devuelvo 0 si no hay memoria o 1 si se pudo alocar correctamente los generos
 static int allocGenres(char**m,char*s)
 {
-    unsigned int i=0,j=0,k=0;//Itero el string y las filas y columnas de la matriz
+    unsigned int i=0,k=0;//Itero el string y las filas de la matriz
     char ok;
     while(s[k] != ";"){
         if(i%BLOQUE ==0){
@@ -79,11 +86,13 @@ static int allocGenres(char**m,char*s)
             return NO_MEM;
         i++;
     }
+    m[i] = NULL;
+    realloc(m,(i)*sizeof(char*));
     return OK;
 }
 
 //Recorro la linea del file y lo voy almacenando en el ADT
-//Retorna 0 si no hay memoria,1 si la linea no es una serie
+//Retorna 0 si no hay memoria,1 si la linea no es una serie y tampoco una pelicula
 int nextLine(LineADT line,FILE*file)
 {
     while(feof(file)==0){
@@ -130,12 +139,25 @@ int nextLine(LineADT line,FILE*file)
         TOKENIZE(token,";");
         line->numVotes = atoi(token);
 
-
+        //No recorro el resto de la linea ya que no es importante para estos
+        //queries
     }
 }
 
 //Libero la linea en la que estoy parado
-void freeLine(LineADT line);
+void freeLine(LineADT line)
+{
+    free(line->primaryTitle);
+    unsigned int i=0;
+    while(line->genres[i] != NULL)
+        free(line->genres[i]);
+    free(line->genres);
+    free(line->averageRating);
+}
 
 //Libero todo el struct
-void freeLineADT(LineADT line);
+void freeLineADT(LineADT line)
+{
+    freeLine(line);
+    free(line);
+}
