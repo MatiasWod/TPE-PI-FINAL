@@ -11,7 +11,7 @@ queryADT newQuery(void);//Crea la query vacia
 
 unsigned int add(queryADT query);//Agrega nueva pelicua/serie y devuelve 1 si se pudo agregar y 0 si no pudo.
 
-void hasNext(queryADT query);//Pasa al siguiente elemento
+unsigned int hasNext(queryADT query);//Verifica si hay un siguiente elemento
 
 void toBegin(queryADT query);//Resetea el iterador
 

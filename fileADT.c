@@ -134,56 +134,6 @@ int nextLine(LineADT line,FILE*file)
     }
 }
 
-/*
-char c = fgetc(file);
-        
-        //Veo si es una pelicula o una serie
-        if(c == 'm')
-            line->titleType=1;
-        else
-            line->titleType=0;
-        
-        //Avanzo hasta toparme con un ';' ignoro el resto del nombre de movie
-        while((c = fgetc(file)) != ';');
-        
-        //Leo el primaryTitle
-        int i=0;
-        while((c = fgetc(file))!= ';'){
-            if(i%BLOQUE ==0){
-                line->primaryTitle = realloc(line->primaryTitle,(i+BLOQUE)*sizeof(char));
-            }
-            line->primaryTitle[i++] = c;
-        }
-        line->primaryTitle[i] = '\0';
-        line->primaryTitle = realloc(line->primaryTitle,(i)*sizeof(char));
-        
-        //Paso el string del año a un int
-        char num[MAX_DIGIT_YEAR+1];
-        num[MAX_DIGIT_YEAR] = '\0';//Lo hago null terminated
-        i=0;
-        while((c = fgetc(file)) !=';')
-            num[i++] = c;
-        line->startYear = atoi(num);
-
-        //Ignoro endYear, no se usa para las queries dadas
-        while((c=fgetc(file)) != ';');
-
-        //Almaceno los generos en vector de strings
-        i=0;
-        int j=0,k=0;//itero filas y columnas de la matriz de genres
-        while((c=fgetc(file)) != ';'){
-            if(j%BLOQUE == 0)
-                line->genres = malloc((j+BLOQUE)*sizeof(char*));
-            while((c != ',')){
-                if(k%BLOQUE == 0)
-                    line->genres[j] = malloc((k+BLOQUE)*sizeof(char));
-                line->genres[j][k++] = c;
-                c = fgetc(file);
-            }
-            j++;
-        }
-*/
-
 //Libero la linea en la que estoy parado
 void freeLine(LineADT line);
 

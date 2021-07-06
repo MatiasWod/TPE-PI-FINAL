@@ -2,8 +2,6 @@
 #include "fileADT.h"
 #include "queryADT.h"
 
-#define BLOCK 50
-
 int main(int argc, char ** argv)
 {
     FILE * stream;
@@ -15,12 +13,13 @@ int main(int argc, char ** argv)
 		printf(“FILE_NOT_FOUND: El archivo no existe.”);
 		return 2;
     }
+
     LineADT linea = newLine(stream);
     queryADT list = newQuery();
     while (hasNextLine(linea)){
         list = add(list);
         linea = nextLine(stream);
-        freeLine(linea);
+        freeLine(list);
     }
     FILE * queryOne = fopen("query1.csv", "w+t");
     FILE * queryTwo = fopen("query2.csv", "w+t");
@@ -35,4 +34,12 @@ int main(int argc, char ** argv)
         AddQ3Line(getMostVoted(list), stream);
         list = nextYear(list);
     }
+    fclose(stream);
+    fclose(queryOne);
+    fclose(queryTwo);
+    fclose(queryThree);
+    toBegin(list);
+    freeQuery(list);
+    freeStruct(line);
+    return 0;
 }
