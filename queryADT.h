@@ -7,7 +7,7 @@ static int compare(unsigned int year1,unsigned int year2){
         return year1-year2;
 }
 
-queryADT newQuery(void);//Crea las querys vacias
+queryADT newQuery(void);//Crea la query vacia
 
 unsigned int add(queryADT query);//Agrega nueva pelicua/serie y devuelve 1 si se pudo agregar y 0 si no pudo.
 
@@ -21,7 +21,7 @@ char *getFilms(queryADT query);//Numero total de cantidad de peliculas de un ani
 
 char *getSeries(queryADT query);//Numero total de cantidad de series de un anio, devuelto en string
 
-char **getGenre(queryADT query,unsigned int *cantFilms)//todos los generos de un anio y cantidad de peliculas de cada genero, el vectpr tiene la cantidad de peliculas para cada genero
+char **getGenre(queryADT query,unsigned int *cantFilms);//todos los generos de un anio y cantidad de peliculas de cada genero, el vector tiene la cantidad de peliculas para cada genero
 
 char *getMostVoted(queryADT query);//devuelve en string la pelicula y la serie mas votada del current year en el siguiente formato: startYear;film;votesFilm;ratingFilm;serie;votesSerie;ratingSerie
 
