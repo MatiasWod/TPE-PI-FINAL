@@ -41,5 +41,6 @@ int main(int argc, char ** argv)
     toBegin(list);
     freeQuery(list);
     freeStruct(line);
+    
     return 0;
 }
