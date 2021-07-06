@@ -51,6 +51,7 @@ int nextLine(LineADT line,FILE*file)
             }
             line->primaryTitle[i++] = c;
         }
+        line->primaryTitle[i] = '\0';
         line->primaryTitle = realloc(line->primaryTitle,(i)*sizeof(char));
         
         //Paso el string del año a un int
