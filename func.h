@@ -2,8 +2,8 @@
 
 unsigned int checkArgs(int argc, char ** argv, FILE * archivo);
 
-AddQ1Line(year, getFilms(list), getSeries(list), stream);
+void AddQ1Line(char * year, char * films, char * series, FILE * stream);
 
-AddQ2Line(year, getGenre(list, cantFilms), cantFilms, stream);
-        
-AddQ3Line(getMostVoted(list), stream);
+void AddQ2Line(char * year, char ** genres, char ** films, stream);
+
+void AddQ3Line(char * str, stream);
