@@ -18,7 +18,10 @@ int hasNextLine(LineADT line,FILE*file);
 //Recorro la linea del file y lo voy almacenando en el ADT
 int nextLine(LineADT line,FILE*file);
 
-//Libero la linea en la que estoy parado(libero el TAD en otras palabras)
+//Libero la linea en la que estoy parado
 void freeLine(LineADT line);
+
+//Libero todo el struct
+void freeLineADT(LineADT line);
 
 #endif
