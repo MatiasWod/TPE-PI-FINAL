@@ -3,7 +3,7 @@
 
 typedef struct queryCDT *queryADT;
 
-queryADT newQuery(queryADT query);//Crea las querys vacias
+queryADT newQuery(void);//Crea las querys vacias
 
 void hasNext(queryADT query);//Pasa al siguiente elemento
 
