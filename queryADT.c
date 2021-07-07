@@ -190,15 +190,15 @@ char *getGenre(queryADT query,unsigned int *cantFilms){
     char * s = NULL;
     while (iter != NULL){
         genres = copy(genres, i, query->currentYear->year, &i);
-        if (str = NULL) 
+        if (genres == NULL) 
             return NULL;
         genres[i]=';';
         genres = copy(genres, i+1, iter->nameGenero, &i);
-        if (str = NULL) 
+        if (genres == NULL) 
             return NULL;
         genres[i]=';';
         genres = copy(genres, i+1,( s = intAString(iter->cantGen)), &i);
-        if (str = NULL) 
+        if (genres == NULL) 
             return NULL;
         genres[i] = '\n'
         iter = iter->tail;
@@ -217,31 +217,31 @@ char *getMostVoted(queryADT query){
     char * votesM;
     char * votesS;
     res = copy(res, i, (year = intAString(year, query->currentYear->year)), &i);
-    if (str = NULL)
+    if (res == NULL)
      return NULL;
     res[i] = ';';
     res = copy(res, i+1, query->currentYear->query3->nameMaxP, &i);
-    if (str = NULL) 
+    if (res == NULL) 
         return NULL;
     res[i] = ';';
     res = copy(res, i+1, (votesM = intAString(votesM, query->currentYear->query3->maxVotesP)), &i);
-    if (str = NULL) 
+    if (res == NULL) 
         return NULL;
     res[i] = ';';
     res = copy(res, i+1, query->currentYear->query3->maxRatingP, &i);
-    if (str = NULL) 
+    if (res == NULL) 
         return NULL;
     res[i]=';';
     res = copy(res, i+1, query->currentYear->query3->nameMaxS, &i);
-    if (str = NULL) 
+    if (res == NULL) 
         return NULL;
     res[i]=';';
     res = copy(res, i+1, (votesS = intAString(votesS, query->currentYear->query3->maxVotesS)), &i);
-    if (str = NULL) 
+    if (res == NULL) 
         return NULL;
     res[i]=';';
     res = copy(res, i+1, query->currentYear->query3->maxRatingP, &i);
-    if (str = NULL) 
+    if (res == NULL) 
         return NULL;
     res[i]='\0';
     free(year);
