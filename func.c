@@ -12,35 +12,3 @@ unsigned int checkArgs(int argc, char ** argv, FILE * archivo){
 		return FILE_NOT_FOUND;
 	return OK;
 }
-
-// AddQ1Line guarda en el archivo parametro lo requerido para el query1
-void AddQ1Line(char * year, char * films, char * series, FILE * stream){
-    fputs(year, stream);                
-    fputc(';', stream);
-    fputs(films, stream);
-    fputc(';', stream);
-    fputs(series, stream);
-    fputc('\n', stream);
-    return;
-}
-
-// AddQ2Line guarda en el archivo parametro lo requerido para el query2
-void AddQ2Line(char * year, char ** genres, char ** films,FILE *stream){
-    for (int i=0 ;genres[i][0] != '\0'; i++){
-        fputs(year, stream);
-        fputc(';', stream);
-        fputs(genres[i], stream);
-        fputc(';', stream);
-        fputs(films[i], stream);
-        fputc('\n', stream);
-    }
-    return;
-}
-
-// AddQ3Line guarda en el archivo parametro lo requerido para el query3
-void AddQ3Line(char * str,FILE *stream){
-    fputs(str, stream);
-    fputc('\n', stream);
-    return;
-}
-
