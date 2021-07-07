@@ -4,6 +4,7 @@
 
 #define BLOQUE 10
 #define MAX_DIGIT_YEAR 4
+#define MAX_RAITING_DIGIT 5
 #define MAX_LINE 234
 #define NO_MEM 0
 #define OK 1
@@ -12,24 +13,31 @@
 #define TV_SERIES 2
 #define TOKENIZE(token,c) (token = strtok(NULL, c))
 
+typedef struct node{
+    char *genre;
+    struct node * tail;
+}TNode;
 
 typedef struct line{
     char titleType; //1 si es pelicula 2 si es serie.
     char * primaryTitle; //el nombre de la pelicula/serie
     unsigned int startYear;// si es una película, el año. Si es una serie, en qué año comenzó a emitirse
-    char **genres; //Lista de géneros separados por coma
+    TList firstGenre; //Hago una lista para guardar los generos.
     char* averageRating; //un número entre 0 y 10, con un decimal(ver de dejarlo en un decimal)
     unsigned int numVotes;// cantidad de votos que obtuvo
 }LineCDT;
 
 //Prototipos de funciones static
 static int whatTitleType(char*s1);
-static int allocString(char *source,char* target);
-static int allocGenres(char**m,char*s);
+static int allocString(char **target,char* source);
+static TList addRec(TList list,char*s,int * ok);
+static void freeRec(TList list);
+static char * getString(char*s,char c,unsigned int* pos);
 
 
 
-//Creo un nuevo adt a partir de un puntero a file que se le pasa a la funcion.
+/*Creo un nuevo adt. Devuelve un puntero al struct y NULL si no pudo
+alocar memoria para el adt*/
 LineADT newLine(void)
 {
     return calloc(1,sizeof(LineCDT));
@@ -48,50 +56,72 @@ static int whatTitleType(char*s1)
 {
     if(strcmp(s1,"movie")== 0)
         return MOVIE;
-    else if(strcmp(s1,"tvSeries"))
+    else if(strcmp(s1,"tvSeries")==0)
         return TV_SERIES;
     return 0;
 }
 
-//Copio un string a otro string y lo asigno en el heap
-static int allocString(char *source,char* target)
+/*Aloco memoria al heap para guardar un string y copio en target
+lo que tiene source. Retorno 1 si se copio correctamente y 0 sino.*/
+static int allocString(char **target,char* source)
 {
     unsigned int i=0;
     while(source[i] != '\0'){
-        if(i%BLOQUE==0){
-            target = realloc(target,(i+BLOQUE)*sizeof(char));
-            if(target == NULL)
+        if(i % BLOQUE == 0){
+            *target = realloc(*target,(i+BLOQUE)*sizeof(char));
+            if(*target == NULL)
                 return NO_MEM;
         }
-        target[i] = source[i];
+        (*target)[i] = source[i];
         i++;
     }
-    target[i++] = '\0';
-    target = realloc(target,(i)*sizeof(char));
+    *target = realloc(*target,(i+1)*sizeof(char));
+    (*target)[i] = '\0';
     return OK;
 }
 
-//Genero una matriz donde hago que la ultima fila devuelva NULL
-//Devuelvo 0 si no hay memoria o 1 si se pudo alocar correctamente los generos
-static int allocGenres(char**m,char*s)
+/*Agrego recursivamente un nodo que representa un genero a la lista
+de generos*/
+static TList addRec(TList list,char*s,int * ok)
 {
-    unsigned int i=0,k=0;//Itero el string y las filas de la matriz
-    char ok;
-    while(s[k] != ';'){
-        if(i%BLOQUE ==0){
-            m = realloc(m,(i+BLOQUE)*sizeof(char*));
-            if(m == NULL)
-                return NO_MEM;
-        }
-        ok = allocString(s+k,m[i]);
-        if(ok == NO_MEM)
-            return NO_MEM;
-        i++;
+    if(list == NULL ||strcmp(list->genre,s) < 0){
+        TList new = malloc(sizeof(TNode));
+        new->genre = s;//Le paso el puntero del string que esta en el heap
+        *ok=OK;
+        new->tail = list;
+        return new;
     }
-    m[i] = NULL;
-    m = realloc(m,(i)*sizeof(char*));
-    return OK;
+    //else c < 0, entonces sigo recorriendo la lista
+    //No considero c==0 ya que estaria mal el formato del .csv
+    list->tail = addRec(list->tail,s,ok);
+    return list;
 }
+
+/*
+Devuelvo un string(alocado en el heap) que tiene copiado el string s
+a partir pos hasta la primera aparicion del caracter c o null. Ademas,
+en pos dejo hasta donde recorrio
+*/
+static char * getString(char*s,char c,unsigned int* pos)
+{
+    unsigned int i=*pos,k=0;//Con uno itero el string y el string rta respectivamente
+    char * rta = malloc((k+BLOQUE)*sizeof(char));
+    while(s[i] != c && s[i] != ';'){
+        if(k % BLOQUE == 0){
+            rta = realloc(rta,(k+BLOQUE)*sizeof(char));
+            if(rta == NULL)
+                return NULL;//Si no se pudo asignar memoria devuelvo NULL
+        }
+        rta[k++] = s[i++];
+    }
+    rta = realloc(rta,(k+1)*sizeof(char));
+    rta[k] = '\0';
+    if (s[i] == ';')
+        *pos = i-1;
+    else *pos = i;
+    return rta;
+}
+
 
 //Recorro la linea del file y lo voy almacenando en el ADT
 //Retorna 0 si no hay memoria,1 si la linea no es una serie y tampoco una pelicula
@@ -103,37 +133,50 @@ int nextLine(LineADT line,FILE*file)
     char *lineFile = malloc(MAX_LINE*sizeof(char));
     if(lineFile == NULL)
         return NO_MEM;
-    fgets(lineFile,MAX_LINE,file);//Poner esto antes de asignar memoria asi, no asigno al pedo
-    char * token = strtok(lineFile,";");
+    fgets(lineFile,MAX_LINE,file);
+    lineFile =strtok(lineFile,";");
 
     //titleType
-    int rta = whatTitleType(token);
+    int rta = whatTitleType(lineFile);
     if(rta == 0)
         return 1;//Si no es ni pelicula ni serie,no me interesa almacenarlo
-
+    line->titleType = rta;
+    
     //Paso al siguiente campo de la linea
     //PrimaryTitle
+    char *token;
     TOKENIZE(token,";");
-    int ok = allocString(token,line->primaryTitle);
+    int ok = allocString(&line->primaryTitle,token);
     if(ok == NO_MEM)
         return NO_MEM;
         
     //startYear
     TOKENIZE(token,";");
     line->startYear = atoi(token);
-        
+
+      
     //endYear, ignoro el campo ya que no lo uso
     TOKENIZE(token,";");
-
+    
     //genres
+    //Si es serie, ignoro esta iteracion de token, si es pelicula
+    //guardo los generos en una lista
     TOKENIZE(token,";");
-    ok = allocGenres(line->genres,token);
-    if(ok == NO_MEM)
-        return NO_MEM;
-        
+    if(line->titleType == MOVIE){
+        unsigned int pos=0;
+        while(token[pos] != ';'){
+            char *subToken = getString(token,',',&pos);
+            pos+=1;
+            line->firstGenre = addRec(line->firstGenre,subToken,&ok);
+            if(ok == NO_MEM)
+                return NO_MEM;
+        }
+    }
+    
+ 
     //averageRating
     TOKENIZE(token,";");
-    ok = allocString(token,line->averageRating);
+    ok = allocString(&line->averageRating,token);
     if(ok == NO_MEM)
         return NO_MEM;
 
@@ -145,24 +188,34 @@ int nextLine(LineADT line,FILE*file)
     //queries
 
     //Si llegue a esta instancia pude guardar sin problema en el tad
+    //Libero el string donde se almaceno la linea donde estoy parado en el file
+    free(lineFile);
     //Devuelvo added para indicar que se agrego correctamente
     return ADDED;
 }
 
+static void freeRec(TList list)
+{
+    if(list == NULL)
+        return;
+    freeRec(list->tail);
+    //free(list->genre);
+    free(list);
+}
+
 //Libero la linea en la que estoy parado
 void freeLine(LineADT line)
-{
-    free(line->primaryTitle);
-    unsigned int i=0;
-    while(line->genres[i] != NULL)
-        free(line->genres[i]);
-    free(line->genres);
-    free(line->averageRating);
+{//Tengo que hacer un if a cada campo que se le pudo haber asignado memoria 
+    if(line->primaryTitle != NULL)
+        free(line->primaryTitle);
+    if(line->firstGenre != NULL)
+        freeRec(line->firstGenre);
+    if(line->averageRating != NULL)
+        free(line->averageRating);
 }
 
 //Libero todo el struct
 void freeLineADT(LineADT line)
 {
-    freeLine(line);
     free(line);
 }
