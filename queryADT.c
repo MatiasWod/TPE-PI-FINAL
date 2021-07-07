@@ -159,16 +159,16 @@ static char * copy(char * str, int pos, char * source, int * newPos ){
     int i = pos,j;
     if (source == NULL) return NULL;
     str = realloc(str, (i+BLOCK));
-    if (str = NULL)  return NULL;
+    if (str == NULL)  return NULL;
     for (j = 0; source[j] != '\0'; j++, i++){
         if (i % BLOCK == 0){
             str = realloc(str, (i+BLOCK));
-            if (str = NULL) return NULL;
+            if (str == NULL) return NULL;
         }
         str[i] = source[j];
     }
     str = realloc(str, i+1);
-    if (str = NULL) return NULL;
+    if (str == NULL) return NULL;
     *newPos = i;
     return str;
 }
@@ -181,13 +181,13 @@ char *getGenre(queryADT query,unsigned int *cantFilms){
     char * s = NULL;
     while (iter != NULL){
         genres = copy(genres, i, query->currentYear->year, &i);
-        if (str = NULL) return NULL;
+        if (res == NULL) return NULL;
         genres[i]=';';
         genres = copy(genres, i+1, iter->nameGenero, &i);
-        if (str = NULL) return NULL;
+        if (res == NULL) return NULL;
         genres[i]=';';
         genres = copy(genres, i+1,( s = intAString(iter->cantGen)), &i);
-        if (str = NULL) return NULL;
+        if (res == NULL) return NULL;
         genres[i] = '\n'
         iter = iter->tail;
         i++;
@@ -205,25 +205,25 @@ char *getMostVoted(queryADT query){
     char * votesM;
     char * votesS;
     res = copy(res, i, (year = intAString(year, query->currentYear->year)), &i);
-    if (str = NULL) return NULL;
+    if (res == NULL) return NULL;
     res[i] = ';';
     res = copy(res, i+1, query->currentYear->query3->nameMaxP, &i);
-    if (str = NULL) return NULL;
+    if (res == NULL) return NULL;
     res[i] = ';';
     res = copy(res, i+1, (votesM = intAString(votesM, query->currentYear->query3->maxVotesP)), &i);
-    if (str = NULL) return NULL;
+    if (res == NULL) return NULL;
     res[i] = ';';
     res = copy(res, i+1, query->currentYear->query3->maxRatingP, &i);
-    if (str = NULL) return NULL;
+    if (res == NULL) return NULL;
     res[i]=';';
     res = copy(res, i+1, query->currentYear->query3->nameMaxS, &i);
-    if (str = NULL) return NULL;
+    if (res == NULL) return NULL;
     res[i]=';';
     res = copy(res, i+1, (votesS = intAString(votesS, query->currentYear->query3->maxVotesS)), &i);
-    if (str = NULL) return NULL;
+    if (res == NULL) return NULL;
     res[i]=';';
     res = copy(res, i+1, query->currentYear->query3->maxRatingP, &i);
-    if (str = NULL) return NULL;
+    if (res == NULL) return NULL;
     res[i]='\0';
     free(year);
     free(votesM);
