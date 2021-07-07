@@ -1,11 +1,13 @@
 #include "fileADT.h"
 #include <stdlib.h>
+#include <string.h>
 
 #define BLOQUE 10
 #define MAX_DIGIT_YEAR 4
 #define MAX_LINE 234
 #define NO_MEM 0
 #define OK 1
+#define ADDED 2
 #define MOVIE 1
 #define TV_SERIES 2
 #define TOKENIZE(token,c) (token = strtok(NULL, c))
@@ -57,7 +59,7 @@ static int allocString(char *source,char* target)
     unsigned int i=0;
     while(source[i] != '\0'){
         if(i%BLOQUE==0){
-            realloc(target,(i+BLOQUE)*sizeof(char));
+            target = realloc(target,(i+BLOQUE)*sizeof(char));
             if(target == NULL)
                 return NO_MEM;
         }
@@ -65,7 +67,7 @@ static int allocString(char *source,char* target)
         i++;
     }
     target[i++] = '\0';
-    realloc(target,(i)*sizeof(char));
+    target = realloc(target,(i)*sizeof(char));
     return OK;
 }
 
@@ -75,9 +77,9 @@ static int allocGenres(char**m,char*s)
 {
     unsigned int i=0,k=0;//Itero el string y las filas de la matriz
     char ok;
-    while(s[k] != ";"){
+    while(s[k] != ';'){
         if(i%BLOQUE ==0){
-            realloc(m,(i+BLOQUE)*sizeof(char*));
+            m = realloc(m,(i+BLOQUE)*sizeof(char*));
             if(m == NULL)
                 return NO_MEM;
         }
@@ -87,61 +89,64 @@ static int allocGenres(char**m,char*s)
         i++;
     }
     m[i] = NULL;
-    realloc(m,(i)*sizeof(char*));
+    m = realloc(m,(i)*sizeof(char*));
     return OK;
 }
 
 //Recorro la linea del file y lo voy almacenando en el ADT
 //Retorna 0 si no hay memoria,1 si la linea no es una serie y tampoco una pelicula
+//Retorna 2 si se se añadio correctamente
 int nextLine(LineADT line,FILE*file)
 {
-    while(feof(file)==0){
-        //Hacemos un string de toda la linea que vamos a liberar al final
-        //de la funcion
-        char *lineFile = malloc(MAX_LINE*sizeof(char));
-        if(lineFile == NULL)
-            return NO_MEM;
-        fgets(lineFile,MAX_LINE,file);//Poner esto antes de asignar memoria asi, no asigno al pedo
-        char * token = strtok(lineFile,";");
+    //Hacemos un string de toda la linea que vamos a liberar al final
+    //de la funcion
+    char *lineFile = malloc(MAX_LINE*sizeof(char));
+    if(lineFile == NULL)
+        return NO_MEM;
+    fgets(lineFile,MAX_LINE,file);//Poner esto antes de asignar memoria asi, no asigno al pedo
+    char * token = strtok(lineFile,";");
 
-        //titleType
-        int rta = whatTitleType(token);
-        if(rta == 0)
-            return 1;//Si no es ni pelicula ni serie,no me interesa almacenarlo
+    //titleType
+    int rta = whatTitleType(token);
+    if(rta == 0)
+        return 1;//Si no es ni pelicula ni serie,no me interesa almacenarlo
 
-        //Paso al siguiente campo de la linea
-        //PrimaryTitle
-        TOKENIZE(token,";");
-        int ok = allocString(token,line->primaryTitle);
-        if(ok == NO_MEM)
-            return NO_MEM;
+    //Paso al siguiente campo de la linea
+    //PrimaryTitle
+    TOKENIZE(token,";");
+    int ok = allocString(token,line->primaryTitle);
+    if(ok == NO_MEM)
+        return NO_MEM;
         
-        //startYear
-        TOKENIZE(token,";");
-        line->startYear = atoi(token);
+    //startYear
+    TOKENIZE(token,";");
+    line->startYear = atoi(token);
         
-        //endYear, ignoro el campo ya que no lo uso
-        TOKENIZE(token,";");
+    //endYear, ignoro el campo ya que no lo uso
+    TOKENIZE(token,";");
 
-        //genres
-        TOKENIZE(token,";");
-        ok = allocGenres(line->genres,token);
-        if(ok == NO_MEM)
-            return NO_MEM;
+    //genres
+    TOKENIZE(token,";");
+    ok = allocGenres(line->genres,token);
+    if(ok == NO_MEM)
+        return NO_MEM;
         
-        //averageRating
-        TOKENIZE(token,";");
-        ok = allocString(token,line->averageRating);
-        if(ok == NO_MEM)
-            return NO_MEM;
+    //averageRating
+    TOKENIZE(token,";");
+    ok = allocString(token,line->averageRating);
+    if(ok == NO_MEM)
+        return NO_MEM;
 
-        //numVotes
-        TOKENIZE(token,";");
-        line->numVotes = atoi(token);
+    //numVotes
+    TOKENIZE(token,";");
+    line->numVotes = atoi(token);
 
-        //No recorro el resto de la linea ya que no es importante para estos
-        //queries
-    }
+    //No recorro el resto de la linea ya que no es importante para estos
+    //queries
+
+    //Si llegue a esta instancia pude guardar sin problema en el tad
+    //Devuelvo added para indicar que se agrego correctamente
+    return ADDED;
 }
 
 //Libero la linea en la que estoy parado
