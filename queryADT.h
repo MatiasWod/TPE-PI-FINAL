@@ -10,7 +10,7 @@ static int compare(unsigned int year1,unsigned int year2){
 
 queryADT newQuery(void);//Crea la query vacia
 
-unsigned int add(queryADT query,lineADT data);//Agrega nueva pelicua/serie con sus datos y devuelve 1 si se pudo agregar y 0 si no pudo.
+unsigned int add(queryADT query,LineADT data);//Agrega nueva pelicua/serie con sus datos y devuelve 1 si se pudo agregar y 0 si no pudo.
 
 unsigned int hasNext(queryADT query);//Verifica si hay un siguiente elemento
 
