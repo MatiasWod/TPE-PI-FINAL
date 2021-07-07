@@ -1,11 +1,13 @@
-#ifndef __file__h
-#define __file__h
+#ifndef __fileADT__h
+#define __fileADT__h
 #include <stdio.h>
 //El file se recorrera una unica vez entonces no hace falta un iterador de lista
 //ni nada ya que se va a liberar y guardar linea por linea a medida que se va 
 //recorriendo el archivo
 
-typedef LineCDT* LineADT;
+typedef struct line* LineADT;
+
+typedef struct node * TList;
 
 /*Creo un nuevo adt a partir de un puntero a file que se le pasa a la funcion.*/
 LineADT newLine(void);
