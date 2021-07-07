@@ -48,6 +48,7 @@ typedef struct queryCDT{
 static char *intAString(unsigned int num){
     int digitos=floor(log10(abs(num)))+1;
     char * str=malloc(sizeof(char)*digitos+1);
+    if (str == NULL) return NULL;
     sprintf(str,"%d",num);
     return str;
 }
@@ -78,7 +79,7 @@ static TGeneros addGenRec(TGeneros first,TList new){
 
 static void addNewMax(char **maxRating,char **maxName,unsigned int *maxVotes,char *rating,char *name,unsigned int votes){
     int ultimo;
-    *maxRating=copy(*maxRating,0,rating,&ultimo);            //uso copy ya que recorre solo una vez el string y crea exactamente la memoria que necesito
+    *maxRating=copy(*maxRating,0,rating,&ultimo);         //uso copy ya que recorre solo una vez el string y crea exactamente la memoria que necesito
     (*maxRating)[ultimo]="\0";
     *maxName=copy(*maxName,0,name,&ultimo);
     (*maxName)[ultimo]='\0';
@@ -173,21 +174,39 @@ static char * copy(char * str, int pos, char * source, int * newPos ){
     return str;
 }
 
+char * getFilmsNSeries(queryADT query){
+    int i;
+    char * str = NULL;
+    str = copy(str, 0, getYear, &i);
+    if (str == NULL)
+        return NULL;
+    str[i]=';';
+    str = copy(str, i+1, getFilms(query), &i );
+    if (str == NULL)
+        return NULL;
+    str[i]=';';
+    str = copy(str, i+1, getSeries(query), &i);
+    if (str == NULL)
+        return NULL;
+    str[i]='\0';
+    return str;
+}
+
 //todos los generos de un anio y cantidad de peliculas de cada genero, el vector tiene la cantidad de peliculas para cada genero
-char *getGenre(queryADT query,unsigned int *cantFilms){
+char *getGenre(queryADT query){
     TGeneros iter = query->currentYear->first;
     int i = 0;
     char * genres = NULL;
     char * s = NULL;
     while (iter != NULL){
         genres = copy(genres, i, query->currentYear->year, &i);
-        if (res == NULL) return NULL;
+        if (genres == NULL) return NULL;
         genres[i]=';';
         genres = copy(genres, i+1, iter->nameGenero, &i);
-        if (res == NULL) return NULL;
+        if (genres == NULL) return NULL;
         genres[i]=';';
         genres = copy(genres, i+1,( s = intAString(iter->cantGen)), &i);
-        if (res == NULL) return NULL;
+        if (genres == NULL) return NULL;
         genres[i] = '\n'
         iter = iter->tail;
         i++;
