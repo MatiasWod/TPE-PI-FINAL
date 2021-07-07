@@ -4,7 +4,7 @@
 #include <math.h>
 #include <string.h>
 #define MOVIE 1
-#define TV_SERIES 2
+#define BLOCK 10
 
 //Para almacenar la pelicula/serie con mas votos. Estructura especifica para el query3
 typedef struct Q3{
@@ -43,7 +43,24 @@ typedef struct queryCDT{
     Tyear currentYear;
 };
 
-=======
+//reasigna memoria a str y copia source desde la posicion pos y devuelve donde termina el string en newPos
+static char * copy(char * str, int pos, char * source, int * newPos ){
+    int i = pos,j;
+    if (source == NULL) return NULL;
+    str = realloc(str, (i+BLOCK));
+    if (str = NULL)  return NULL;
+    for (j = 0; source[j] != '\0'; j++, i++){
+        if (i % BLOCK == 0){
+            str = realloc(str, (i+BLOCK));
+            if (str = NULL) return NULL;
+        }
+        str[i] = source[j];
+    }
+    str = realloc(str, i+1);
+    if (str = NULL) return NULL;
+    *newPos = i;
+    return str;
+}
 //Pasa un unsigned int a string
 static char *intAString(unsigned int num){
     int digitos=floor(log10(abs(num)))+1;
@@ -58,7 +75,7 @@ queryADT newQuery(void){
 }
 
 
-static TGeneros addGenRec(TGeneros first,TList new){
+static TGeneros addGenRec(TGeneros first,TList new, int *ok){
     int c;
     if (new==NULL)
         return first;
@@ -66,6 +83,9 @@ static TGeneros addGenRec(TGeneros first,TList new){
         TGeneros aux=calloc(1,sizeof(Generos));
         int ultimo;
         aux->nameGenero=copy(first->nameGenero,0,new->genero,&ultimo);//uso copy ya que me crea memoria y copia la string en una pasada
+        if (first->nameGenero!=NULL){
+            *ok=1;
+        }
         aux->nameGenero[ultimo]='\0';
         aux->cantGen++;
         aux->tail=addGenRec(aux->tail,new->tail);
@@ -94,29 +114,36 @@ static Tyear addRec(Tyear year,LineADT data,int *ok){
         if (data->titleType==MOVIE){
             aux->cantPel++;
             addNewMax(&aux->query3->maxRatingP,&aux->query3->nameMaxP,&aux->query3->maxVotesP,data->averageRating,data->primaryTitle,data->numVotes);
+            if (aux->query3->maxRatingP==0||aux->query3->nameMaxP==0)             //Me fijo si se quedo sin memoria
+                return NULL;
         }
         else{                       //No hace falta verificar que es TV_SERIES porque ya se hizo en el fileADT.c
             aux->cantSeries++;
             addNewMax(&aux->query3->maxRatingS,&aux->query3->nameMaxS,&aux->query3->maxVotesS,data->averageRating,data->primaryTitle,data->numVotes);
+            if (aux->query3->maxRatingS==0||aux->query3->nameMaxS==0)
+                return NULL;
         }
-        aux->first=addGenRec(aux->first,data->genres);
+        aux->first=addGenRec(aux->first,data->genres,ok);
         aux->tail=year;
-        *ok=1;
         return aux;
     }
     if (c==0){ //si estoy en el mismo anio que data
         if (data->titleType==MOVIE){
             year->cantPel++;
-            if (year->query3->maxVotesP<data->numVotes)
+            if (year->query3->maxVotesP<data->numVotes){
                 addNewMax(&year->query3->maxRatingP,&year->query3->nameMaxP,&year->query3->maxVotesP,data->averageRating,data->primaryTitle,data->numVotes);
+                if (aux->query3->maxRatingP==0||aux->query3->nameMaxP==0)
+                    return NULL;
+            }
         }
         else{
             year->cantSeries++;
             if (year->query3->maxVotesS<data->numVotes)
                 addNewMax(&year->query3->maxRatingS,&year->query3->nameMaxS,&year->query3->maxVotesS,data->averageRating,data->primaryTitle,data->numVotes);
+                if (aux->query3->maxRatingS==0||aux->query3->nameMaxS==0)
+                    return NULL;
             }
-            year->first=addGenRec(year->first,data->genres);
-            *ok=1;
+            year->first=addGenRec(year->first,data->genres,ok);
     }
     else
         year->tail=addRec(year->tail,data,ok);   
@@ -142,17 +169,17 @@ void toBegin(queryADT query){
 
 
 //Devuelve el current year en string
-char *getYear(queryADT query){
+static char *getYear(queryADT query){
     return intAString(query->currentYear->year);
 }
 
 //Numero total de cantidad de peliculas de un anio, devuelto en string
-char * getFilms(queryADT query){
-    return intAString(query->currentYear->cantFilms);
+static char * getFilms(queryADT query){
+    return intAString(query->currentYear->cantPel);
 }
 
 //Numero total de cantidad de series de un anio, devuelto en string
-char * getSeries(queryADT query){
+static char * getSeries(queryADT query){
     return intAString(query->currentYear->cantSeries);
 }
 
@@ -200,13 +227,16 @@ char *getGenre(queryADT query){
     char * s = NULL;
     while (iter != NULL){
         genres = copy(genres, i, query->currentYear->year, &i);
-        if (genres == NULL) return NULL;
+        if (genres == NULL)
+            return NULL;
         genres[i]=';';
         genres = copy(genres, i+1, iter->nameGenero, &i);
-        if (genres == NULL) return NULL;
+        if (genres == NULL) 
+            return NULL;
         genres[i]=';';
         genres = copy(genres, i+1,( s = intAString(iter->cantGen)), &i);
-        if (genres == NULL) return NULL;
+        if (genres == NULL) 
+            return NULL;
         genres[i] = '\n'
         iter = iter->tail;
         i++;
@@ -224,25 +254,32 @@ char *getMostVoted(queryADT query){
     char * votesM;
     char * votesS;
     res = copy(res, i, (year = intAString(year, query->currentYear->year)), &i);
-    if (res == NULL) return NULL;
+    if (res == NULL)
+        return NULL;
     res[i] = ';';
     res = copy(res, i+1, query->currentYear->query3->nameMaxP, &i);
-    if (res == NULL) return NULL;
+    if (res == NULL) 
+        return NULL;
     res[i] = ';';
     res = copy(res, i+1, (votesM = intAString(votesM, query->currentYear->query3->maxVotesP)), &i);
-    if (res == NULL) return NULL;
+    if (res == NULL) 
+        return NULL;
     res[i] = ';';
     res = copy(res, i+1, query->currentYear->query3->maxRatingP, &i);
-    if (res == NULL) return NULL;
+    if (res == NULL) 
+        return NULL;
     res[i]=';';
     res = copy(res, i+1, query->currentYear->query3->nameMaxS, &i);
-    if (res == NULL) return NULL;
+    if (res == NULL) 
+        return NULL;
     res[i]=';';
     res = copy(res, i+1, (votesS = intAString(votesS, query->currentYear->query3->maxVotesS)), &i);
-    if (res == NULL) return NULL;
+    if (res == NULL) 
+        return NULL;
     res[i]=';';
     res = copy(res, i+1, query->currentYear->query3->maxRatingP, &i);
-    if (res == NULL) return NULL;
+    if (res == NULL) 
+        return NULL;
     res[i]='\0';
     free(year);
     free(votesM);
@@ -256,5 +293,25 @@ void nextYear(queryADT query){
     return;
 }
 
+static void freeRecGenero(TGeneros first){
+        if (first!=NULL){
+            freeRecGenero(first->tail);
+            free(first);
+        }
+}
+
+static void freeRec(Tyear year){
+    if (year!=NULL){
+        freeRec(year->tail);
+        freeRecGenero(year->first);
+        free(year->query3);
+        free(year);
+    }
+    
+}
+
 //Libera las querys
-void freeQuery(queryADT query);
+void freeQuery(queryADT query){
+    freeRec(query->startYear);
+    free(query);
+}

@@ -14,7 +14,7 @@ int main(int argc, char ** argv)
 		return 2;
     }
 
-    LineaADT linea = newLine(stream);   // Recibo puntero a struct en el cual se depositaran los datos de la linea del csv
+    LineADT linea = newLine(stream);   // Recibo puntero a struct en el cual se depositaran los datos de la linea del csv
     queryADT list = newQuery();         // Creo estructura que tendra un puntero al primer nodo de una lista con los anios y sus respectivas peliculas
 
     // Recorro archivo csv de entrada
@@ -32,17 +32,21 @@ int main(int argc, char ** argv)
     FILE * queryTwo = fopen("query2.csv", "w+t");
     FILE * queryThree = fopen("query3.csv", "w+t");
 
-    int * cantFilms;
-    char * year;
     // Seteo list en el primer nodo (anio mas chico) para recorrer
     list = toBegin(list);
     while (hasNext(list)){              // Mientras haya un anio siguiente
-        year = getYear(list);           // Creo variable con el anio del nodo actual
-        AddQ1Line(year, getFilms(list), getSeries(list), stream);       // Agrego al query1.csv
-        AddQ2Line(year, getGenre(list, cantFilms), cantFilms, stream);  // Agrego al query2.csv
-        AddQ3Line(getMostVoted(list), stream);  // Agrego al query3.csv
-        list = nextYear(list);                  // Avanzo al proximo anio
+        char * qOne = getFilmsNSeries(list);         // Agrego al query1.csv
+        fputs(qOne, queryOne);
+        fputc('\n', queryOne);
+        char * qTwo = getGenre(list);          // Agrego al query2.csv
+        fputs(qTwo, queryTwo);
+        fputc('\n', queryOne);
+        char * qThree = getMostVoted(list);   // Agrego al query3.csv
+        fputs(qThree, queryThree);
+        fputc('\n', queryOne);
+        list = nextYear(list);                // Avanzo al proximo anio
     }
+
     // Cierro archivos "abiertos"
     fclose(stream);
     fclose(queryOne);
@@ -51,7 +55,7 @@ int main(int argc, char ** argv)
     // Seteo list en primer nodo para liberar memoria
     toBegin(list);
     freeQuery(list);
-    freeStruct(line);
+    freeLineADT(line);
 
     return 0;
 }
