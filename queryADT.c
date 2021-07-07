@@ -2,8 +2,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
+#define MOVIE 1
+#define TV_SERIES 2
 
-//Para almacenar la pelicula/serie con mas votos.
+//Para almacenar la pelicula/serie con mas votos. Estructura especifica para el query3
 typedef struct Q3{
     unsigned int maxVotesP;//La pelicula con mas rating (real con un decimal)
     char *maxRatingP;
@@ -11,17 +14,17 @@ typedef struct Q3{
     unsigned int maxVotesS;//La serie con mas rating (real con un decimal)
     char *maxRatingS;
     char *nameMaxS;//String con el nombre de la serie
-}PQ3;
+}Q3;
 
 //los generos tambien los vamos guardando en lista y agregamos en orden ascendente
 typedef struct generos{
     struct generos *tail;
     char *nameGenero; 
     unsigned int cantGen;//cantidad de generos por pelicula
-}PGeneros;
+}Generos;
 
-typedef PGeneros *TGeneros;
-typedef PQ3 * TQ3;
+typedef Generos *TGeneros;
+typedef Q3 * TQ3;
 
 //se guarda por orden descendente
 typedef struct year{
@@ -31,27 +34,100 @@ typedef struct year{
     TGeneros first;//el 1ero de la lista de generos de ese año
     TQ3 query3;
     struct year *tail;
-}Pyear;
+}Year;
 
-typedef Pyear *Tyear;
+typedef Year *Tyear;
 
 typedef struct queryCDT{
     Tyear startYear;
     Tyear currentYear;
 };
 
-static void * CHECK_MEM(void * str){
-    if (str == NULL)
-        return NULL;
+=======
+//Pasa un unsigned int a string
+static char *intAString(unsigned int num){
+    int digitos=floor(log10(abs(num)))+1;
+    char * str=malloc(sizeof(char)*digitos+1);
+    sprintf(str,"%d",num);
+    return str;
 }
-
 //Crea la query vacia
 queryADT newQuery(void){
     return calloc(1,sizeof(struct queryCDT));
 }
 
+
+static TGeneros addGenRec(TGeneros first,TList new){
+    int c;
+    if (new==NULL)
+        return first;
+    if (first==NULL||(c=strcmp(new->genero,first->nameGenero))<0){
+        TGeneros aux=calloc(1,sizeof(Generos));
+        int ultimo;
+        aux->nameGenero=copy(first->nameGenero,0,new->genero,&ultimo);//uso copy ya que me crea memoria y copia la string en una pasada
+        aux->nameGenero[ultimo]='\0';
+        aux->cantGen++;
+        aux->tail=addGenRec(aux->tail,new->tail);
+        return aux;
+    }
+    if (c==0)
+        first=addGenRec(first,new->tail);
+    else
+        first->tail=addGenRec(first->tail,new);
+}
+
+static void addNewMax(char **maxRating,char **maxName,unsigned int *maxVotes,char *rating,char *name,unsigned int votes){
+    int ultimo;
+    *maxRating=copy(*maxRating,0,rating,&ultimo);            //uso copy ya que recorre solo una vez el string y crea exactamente la memoria que necesito
+    (*maxRating)[ultimo]="\0";
+    *maxName=copy(*maxName,0,name,&ultimo);
+    (*maxName)[ultimo]='\0';
+    *maxVotes=votes;
+}
+
+static Tyear addRec(Tyear year,LineADT data,int *ok){
+    int c;
+    if (year==NULL||(c=compare(data->startYear,year->year)>0)){
+        Tyear aux=calloc(1,sizeof(Year));
+        aux->year=data->startyear;
+        if (data->titleType==MOVIE){
+            aux->cantPel++;
+            addNewMax(&aux->query3->maxRatingP,&aux->query3->nameMaxP,&aux->query3->maxVotesP,data->averageRating,data->primaryTitle,data->numVotes);
+        }
+        else{                       //No hace falta verificar que es TV_SERIES porque ya se hizo en el fileADT.c
+            aux->cantSeries++;
+            addNewMax(&aux->query3->maxRatingS,&aux->query3->nameMaxS,&aux->query3->maxVotesS,data->averageRating,data->primaryTitle,data->numVotes);
+        }
+        aux->first=addGenRec(aux->first,data->genres);
+        aux->tail=year;
+        *ok=1;
+        return aux;
+    }
+    if (c==0){ //si estoy en el mismo anio que data
+        if (data->titleType==MOVIE){
+            year->cantPel++;
+            if (year->query3->maxVotesP<data->numVotes)
+                addNewMax(&year->query3->maxRatingP,&year->query3->nameMaxP,&year->query3->maxVotesP,data->averageRating,data->primaryTitle,data->numVotes);
+        }
+        else{
+            year->cantSeries++;
+            if (year->query3->maxVotesS<data->numVotes)
+                addNewMax(&year->query3->maxRatingS,&year->query3->nameMaxS,&year->query3->maxVotesS,data->averageRating,data->primaryTitle,data->numVotes);
+            }
+            year->first=addGenRec(year->first,data->genres);
+            *ok=1;
+    }
+    else
+        year->tail=addRec(year->tail,data,ok);   
+    return year;
+    }
+
 //Agrega nueva pelicua/serie con sus datos y devuelve 1 si se pudo agregar y 0 si no pudo.
-unsigned int add(queryADT query,lineADT data);
+unsigned int add(queryADT query,LineADT data){
+    int ok=0;
+    query->startYear=(query->startYear,data,&ok);
+    return ok;
+}
 
 //Verifica si hay un siguiente elemento
 unsigned int hasNext(queryADT query){
@@ -66,12 +142,7 @@ void toBegin(queryADT query){
 
 //Devuelve el current year en string
 char *getYear(queryADT query){
-    int digitos=floor(log10(abs(query->currentYear->year))+1;
-    char *str=malloc(sizeof(char)*digitos);
-    if (str == NULL)
-        return NULL;
-    sprintf(str,"%d",query->currentYear->year);
-    return str;
+    return intAString(query->currentYear->year);
 }
 
 //Numero total de cantidad de peliculas de un anio, devuelto en string
