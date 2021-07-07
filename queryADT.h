@@ -22,7 +22,7 @@ char *getFilms(queryADT query);//Numero total de cantidad de peliculas de un ani
 
 char *getSeries(queryADT query);//Numero total de cantidad de series de un anio, devuelto en string
 
-char **getGenre(queryADT query,unsigned int *cantFilms);//todos los generos de un anio y cantidad de peliculas de cada genero, el vector tiene la cantidad de peliculas para cada genero
+char *getGenre(queryADT query,unsigned int *cantFilms);//todos los generos de un anio y cantidad de peliculas de cada genero, el vector tiene la cantidad de peliculas para cada genero
 
 char *getMostVoted(queryADT query);//devuelve en string la pelicula y la serie mas votada del current year en el siguiente formato: startYear;film;votesFilm;ratingFilm;serie;votesSerie;ratingSerie
 
