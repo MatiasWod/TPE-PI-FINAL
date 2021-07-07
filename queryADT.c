@@ -40,6 +40,11 @@ typedef struct queryCDT{
     Tyear currentYear;
 };
 
+static void * CHECK_MEM(void * str){
+    if (str == NULL)
+        return NULL;
+}
+
 //Crea la query vacia
 queryADT newQuery(void){
     return calloc(1,sizeof(struct queryCDT));
@@ -58,25 +63,102 @@ void toBegin(queryADT query){
     query->currentYear=query->startYear;
 }
 
+
 //Devuelve el current year en string
 char *getYear(queryADT query){
     int digitos=floor(log10(abs(query->currentYear->year))+1;
     char *str=malloc(sizeof(char)*digitos);
+    if (str == NULL)
+        return NULL;
     sprintf(str,"%d",query->currentYear->year);
     return str;
 }
 
 //Numero total de cantidad de peliculas de un anio, devuelto en string
-char *getFilms(queryADT query);
+char * getFilms(queryADT query){
+    return intAString(query->currentYear->cantFilms);
+}
 
 //Numero total de cantidad de series de un anio, devuelto en string
-char *getSeries(queryADT query);
+char * getSeries(queryADT query){
+    return intAString(query->currentYear->cantSeries);
+}
+
+static char * copy(char * str, int pos, char * source, int * newPos ){
+    int i = pos,j;
+    if (source == NULL) return NULL;
+    str = realloc(str, (i+BLOCK));
+    if (str = NULL)  return NULL;
+    for (j = 0; source[j] != '\0'; j++, i++){
+        if (i % BLOCK == 0){
+            str = realloc(str, (i+BLOCK));
+            if (str = NULL) return NULL;
+        }
+        str[i] = source[j];
+    }
+    str = realloc(str, i+1);
+    if (str = NULL) return NULL;
+    *newPos = i;
+    return str;
+}
 
 //todos los generos de un anio y cantidad de peliculas de cada genero, el vector tiene la cantidad de peliculas para cada genero
-char **getGenre(queryADT query,unsigned int *cantFilms);
+char *getGenre(queryADT query,unsigned int *cantFilms){
+    TGeneros iter = query->currentYear->first;
+    int i = 0;
+    char * genres = NULL;
+    char * s = NULL;
+    while (iter != NULL){
+        genres = copy(genres, i, query->currentYear->year, &i);
+        if (str = NULL) return NULL;
+        genres[i]=';';
+        genres = copy(genres, i+1, iter->nameGenero, &i);
+        if (str = NULL) return NULL;
+        genres[i]=';';
+        genres = copy(genres, i+1,( s = intAString(iter->cantGen)), &i);
+        if (str = NULL) return NULL;
+        genres[i] = '\n'
+        iter = iter->tail;
+        i++;
+        free(s);
+    }
+    genres[i-1] = '\0';
+    return genres;
+}
 
 //devuelve en string la pelicula y la serie mas votada del current year en el siguiente formato: startYear;film;votesFilm;ratingFilm;serie;votesSerie;ratingSerie
-char *getMostVoted(queryADT query);
+char *getMostVoted(queryADT query){
+    int i = 0;
+    char * res = NULL;
+    char * year;
+    char * votesM;
+    char * votesS;
+    res = copy(res, i, (year = intAString(year, query->currentYear->year)), &i);
+    if (str = NULL) return NULL;
+    res[i] = ';';
+    res = copy(res, i+1, query->currentYear->query3->nameMaxP, &i);
+    if (str = NULL) return NULL;
+    res[i] = ';';
+    res = copy(res, i+1, (votesM = intAString(votesM, query->currentYear->query3->maxVotesP)), &i);
+    if (str = NULL) return NULL;
+    res[i] = ';';
+    res = copy(res, i+1, query->currentYear->query3->maxRatingP, &i);
+    if (str = NULL) return NULL;
+    res[i]=';';
+    res = copy(res, i+1, query->currentYear->query3->nameMaxS, &i);
+    if (str = NULL) return NULL;
+    res[i]=';';
+    res = copy(res, i+1, (votesS = intAString(votesS, query->currentYear->query3->maxVotesS)), &i);
+    if (str = NULL) return NULL;
+    res[i]=';';
+    res = copy(res, i+1, query->currentYear->query3->maxRatingP, &i);
+    if (str = NULL) return NULL;
+    res[i]='\0';
+    free(year);
+    free(votesM);
+    free(votesS);
+    return res;
+}
 
 //Pasa al siguiente anio
 void nextYear(queryADT query){
