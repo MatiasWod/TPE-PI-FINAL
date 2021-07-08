@@ -1,6 +1,9 @@
 #ifndef __fileADT__h
 #define __fileADT__h
 #include <stdio.h>
+
+#define MOVIE 1
+#define TV_SERIES 2
 //El file se recorrera una unica vez entonces no hace falta un iterador de lista
 //ni nada ya que se va a liberar y guardar linea por linea a medida que se va 
 //recorriendo el archivo

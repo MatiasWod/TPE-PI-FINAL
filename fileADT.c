@@ -9,17 +9,15 @@
 #define NO_MEM 0
 #define OK 1
 #define ADDED 2
-#define MOVIE 1
-#define TV_SERIES 2
 #define TOKENIZE(token,c) (token = strtok(NULL, c))
 
 typedef struct line{
-    char titleType; //1 si es pelicula 2 si es serie y 0 si no es ninguna de las dos.
-    char * primaryTitle; //el nombre de la pelicula/serie
-    unsigned int startYear;// si es una película, el año. Si es una serie, en qué año comenzó a emitirse
-    TList firstGenre; //Hago una lista para guardar los generos.
-    char* averageRating; //un número entre 0 y 10, con un decimal(ver de dejarlo en un decimal)
-    unsigned int numVotes;// cantidad de votos que obtuvo
+    char titleType;         //1 si es pelicula 2 si es serie y 0 si no es ninguna de las dos.
+    char * primaryTitle;    //el nombre de la pelicula/serie
+    unsigned int startYear; // si es una película, el año. Si es una serie, en qué año comenzó a emitirse
+    TList firstGenre;       //Hago una lista para guardar los generos.
+    char* averageRating;    //un número entre 0 y 10, con un decimal(ver de dejarlo en un decimal)
+    unsigned int numVotes;  // cantidad de votos que obtuvo
 }LineCDT;
 
 //Prototipos de funciones static
