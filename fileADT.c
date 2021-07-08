@@ -5,7 +5,7 @@
 #define BLOQUE 10
 #define MAX_DIGIT_YEAR 4
 #define MAX_RAITING_DIGIT 5
-#define MAX_LINE 234
+#define MAX_LINE 250
 #define NO_MEM 0
 #define OK 1
 #define ADDED 2
@@ -13,13 +13,8 @@
 #define TV_SERIES 2
 #define TOKENIZE(token,c) (token = strtok(NULL, c))
 
-typedef struct node{
-    char *genre;
-    struct node * tail;
-}TNode;
-
 typedef struct line{
-    char titleType; //1 si es pelicula 2 si es serie.
+    char titleType; //1 si es pelicula 2 si es serie y 0 si no es ninguna de las dos.
     char * primaryTitle; //el nombre de la pelicula/serie
     unsigned int startYear;// si es una película, el año. Si es una serie, en qué año comenzó a emitirse
     TList firstGenre; //Hago una lista para guardar los generos.
@@ -51,12 +46,12 @@ al final del archivo
 */
 int hasNextLine(FILE*file)
 {
-    return feof(file) != 0;
+    return feof(file) == 0;
 }
 
 /*
 Retorna 1 si es una pelicula, retorna 2 si es una tvSeries
-y 0 para cualquier otra cosa
+ y 0 para cualquier otra cosa
  */
 static int whatTitleType(char*s1)
 {
@@ -64,7 +59,7 @@ static int whatTitleType(char*s1)
         return MOVIE;
     else if(strcmp(s1,"tvSeries")==0)
         return TV_SERIES;
-    return 0;
+    return 0;//Si es la primera linea o cualquier otro titleType retorno 0
 }
 
 /*
@@ -153,8 +148,12 @@ int nextLine(LineADT line,FILE*file)
 
     //titleType
     int rta = whatTitleType(lineFile);
-    if(rta == 0)
+    if(rta == 0){
+        line->titleType = rta;//Indico que en esta iteracion no hay ni una
+        free(lineFile);//pelicula ni una serie
         return 1;//Si no es ni pelicula ni serie,no me interesa almacenarlo
+    }
+        
     line->titleType = rta;
     //Paso al siguiente campo de la linea
     //PrimaryTitle
@@ -205,6 +204,70 @@ int nextLine(LineADT line,FILE*file)
     free(lineFile);
     //Devuelvo added para indicar que se agrego correctamente
     return ADDED;
+}
+
+/*
+Devuelve el titleType del line en el que esta parado
+*/
+char getTitleType(LineADT line)
+{
+    return line->titleType;
+}
+
+/*
+Devuelve una copia del string del primaryTitle
+Retorna el puntero a la copia o NULL si no se pudo alocar memoria correctamente
+*/
+char *getPrimaryTitle(LineADT line)
+{
+    char *rta = malloc(sizeof(char));
+    int ok = allocString(&rta,line->primaryTitle);
+    if(ok)
+        return rta;
+    return NULL;
+}
+
+/*
+Devuelve el startYear (en unsigned int) de la linea del file
+*/
+unsigned int getStartYear(LineADT line)
+{
+    return line->startYear;
+}
+
+/*
+Devuelve una copia del primer nodo de la lista o NULL si no se pudo
+alocar memoria correctamente
+*/
+TList getFirstGenre (LineADT line)
+{
+    TList rta = malloc(sizeof(TNode));
+    if(rta == NULL)
+        return NULL;
+    rta->genre = line->firstGenre->genre;
+    rta->tail = line->firstGenre->tail;
+    return rta;
+}
+
+/*
+Devuelve un string del averageRating de la linea del file
+Retorna el puntero a la copia o NULL si no se pudo alocar memoria correctamente
+*/
+char * getAverageRating(LineADT line)
+{
+    char *rta = malloc(sizeof(char));
+    int ok = allocString(&rta,line->averageRating);
+    if(ok)
+        return rta;
+    return NULL;
+}
+
+/*
+Devuelve el numVotes(en unsigned int) de la linea del file
+*/
+unsigned int getNumVotes(LineADT line)
+{
+    return line->numVotes;
 }
 
 static void freeRec(TList list)
