@@ -85,8 +85,10 @@ static TGeneros addGenRec(TGeneros first,TList new, int *ok){
         aux->nameGenero=copy(first->nameGenero,0,new->genero,&ultimo);//uso copy ya que me crea memoria y copia la string en una pasada
         if (first->nameGenero!=NULL)
             *ok=1;
-        else
+        else{
             *ok=0;
+            return NULL;
+        }
         aux->nameGenero[ultimo]='\0';
         aux->cantGen++;
         aux->tail=addGenRec(aux->tail,new->tail);
