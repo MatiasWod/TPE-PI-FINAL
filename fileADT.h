@@ -20,7 +20,7 @@ typedef struct node * TList;
 /*---FUNCIONES A BORRAR---*/
 //SON PARA TESTEO
 
-void printList(LineADT line);
+// void printList(LineADT line);
 
 void printListRec(TList list);
 
