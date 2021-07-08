@@ -83,9 +83,10 @@ static TGeneros addGenRec(TGeneros first,TList new, int *ok){
         TGeneros aux=calloc(1,sizeof(Generos));
         int ultimo;
         aux->nameGenero=copy(first->nameGenero,0,new->genero,&ultimo);//uso copy ya que me crea memoria y copia la string en una pasada
-        if (first->nameGenero!=NULL){
+        if (first->nameGenero!=NULL)
             *ok=1;
-        }
+        else
+            *ok=0;
         aux->nameGenero[ultimo]='\0';
         aux->cantGen++;
         aux->tail=addGenRec(aux->tail,new->tail);
@@ -290,7 +291,6 @@ static void freeRec(Tyear year){
         free(year->query3);
         free(year);
     }
-    
 }
 
 //Libera las querys
