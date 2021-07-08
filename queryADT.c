@@ -41,7 +41,7 @@ typedef Year *Tyear;
 typedef struct queryCDT{
     Tyear startYear;
     Tyear currentYear;
-};
+}queryCDT;
 
 //reasigna memoria a str y copia source desde la posicion pos y devuelve donde termina el string en newPos
 static char * copy(char * str, int pos, char * source, int * newPos ){
@@ -132,7 +132,7 @@ static Tyear addRec(Tyear year,LineADT data,int *ok){
             year->cantPel++;
             if (year->query3->maxVotesP<data->numVotes){
                 addNewMax(&year->query3->maxRatingP,&year->query3->nameMaxP,&year->query3->maxVotesP,data->averageRating,data->primaryTitle,data->numVotes);
-                if (aux->query3->maxRatingP==0||aux->query3->nameMaxP==0)
+                if (year->query3->maxRatingP==0||year->query3->nameMaxP==0)
                     return NULL;
             }
         }
@@ -140,7 +140,7 @@ static Tyear addRec(Tyear year,LineADT data,int *ok){
             year->cantSeries++;
             if (year->query3->maxVotesS<data->numVotes)
                 addNewMax(&year->query3->maxRatingS,&year->query3->nameMaxS,&year->query3->maxVotesS,data->averageRating,data->primaryTitle,data->numVotes);
-                if (aux->query3->maxRatingS==0||aux->query3->nameMaxS==0)
+                if (year->query3->maxRatingS==0||year->query3->nameMaxS==0)
                     return NULL;
             }
             year->first=addGenRec(year->first,data->genres,ok);
