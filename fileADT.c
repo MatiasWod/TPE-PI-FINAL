@@ -18,8 +18,6 @@ typedef struct node{
     struct node * tail;
 }TNode;
 
-typedef struct node * TList;
-
 typedef struct line{
     char titleType; //1 si es pelicula 2 si es serie.
     char * primaryTitle; //el nombre de la pelicula/serie
@@ -51,14 +49,14 @@ Llamo a feof para ver si llegue al final del archivo.
 Devuelve algo distinto de 0 si tiene una linea siguiente y 0 si se llego
 al final del archivo
 */
-int hasNextLine(LineADT line,FILE*file)
+int hasNextLine(FILE*file)
 {
     return feof(file) != 0;
 }
 
 /*
 Retorna 1 si es una pelicula, retorna 2 si es una tvSeries
- y 0 para cualquier otra cosa
+y 0 para cualquier otra cosa
  */
 static int whatTitleType(char*s1)
 {
