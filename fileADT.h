@@ -7,8 +7,6 @@
 
 typedef struct line* LineADT;
 
-typedef struct node * TList;
-
 /*Creo un nuevo adt a partir de un puntero a file que se le pasa a la funcion.*/
 LineADT newLine(void);
 
