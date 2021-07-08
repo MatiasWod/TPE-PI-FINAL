@@ -18,6 +18,8 @@ typedef struct node{
     struct node * tail;
 }TNode;
 
+typedef struct node * TList;
+
 typedef struct line{
     char titleType; //1 si es pelicula 2 si es serie.
     char * primaryTitle; //el nombre de la pelicula/serie
