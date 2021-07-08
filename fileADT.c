@@ -34,24 +34,30 @@ static TList addRec(TList list,char*s,int * ok);
 static void freeRec(TList list);
 static char * getString(char*s,char c,unsigned int* pos);
 
-
-
-/*Creo un nuevo adt. Devuelve un puntero al struct y NULL si no pudo
-alocar memoria para el adt*/
+/*
+Creo un nuevo adt. Devuelve un puntero al struct y NULL si no pudo
+alocar memoria para el adt
+*/
 LineADT newLine(void)
 {
     return calloc(1,sizeof(LineCDT));
 }
 
 
-/*Llamo a feof para ver si llegue al final del archivo.
-Devuelve algo distinto de 0 si llegue al final del archivo y 0 sino*/
+/*
+Llamo a feof para ver si llegue al final del archivo.
+Devuelve algo distinto de 0 si tiene una linea siguiente y 0 si se llego
+al final del archivo
+*/
 int hasNextLine(LineADT line,FILE*file)
 {
-    return feof(file);
+    return feof(file) != 0;
 }
 
-//Retorna 1 si es una pelicula, retorna 2 si es una tvSeries y 0 para cualquier otra cosa
+/*
+Retorna 1 si es una pelicula, retorna 2 si es una tvSeries
+ y 0 para cualquier otra cosa
+ */
 static int whatTitleType(char*s1)
 {
     if(strcmp(s1,"movie")== 0)
@@ -61,8 +67,10 @@ static int whatTitleType(char*s1)
     return 0;
 }
 
-/*Aloco memoria al heap para guardar un string y copio en target
-lo que tiene source. Retorno 1 si se copio correctamente y 0 sino.*/
+/*
+Aloco memoria al heap para guardar un string y copio en target
+lo que tiene source. Retorno 1 si se copio correctamente y 0 sino.
+*/
 static int allocString(char **target,char* source)
 {
     unsigned int i=0;
@@ -80,8 +88,10 @@ static int allocString(char **target,char* source)
     return OK;
 }
 
-/*Agrego recursivamente un nodo que representa un genero a la lista
-de generos*/
+/*
+Agrego recursivamente un nodo que representa un genero a la lista
+de generos
+*/
 static TList addRec(TList list,char*s,int * ok)
 {
     if(list == NULL ||strcmp(list->genre,s) < 0){
@@ -106,11 +116,13 @@ static char * getString(char*s,char c,unsigned int* pos)
 {
     unsigned int i=*pos,k=0;//Con uno itero el string y el string rta respectivamente
     char * rta = malloc((k+BLOQUE)*sizeof(char));
+    if(rta == NULL)
+        return NULL;//Si no se pudo asignar memoria devuelvo NULL
     while(s[i] != c && s[i] != ';'){
-        if(k % BLOQUE == 0){
+        if(k % BLOQUE == 0 && k!= 0){
             rta = realloc(rta,(k+BLOQUE)*sizeof(char));
             if(rta == NULL)
-                return NULL;//Si no se pudo asignar memoria devuelvo NULL
+                return NULL;
         }
         rta[k++] = s[i++];
     }
@@ -118,14 +130,17 @@ static char * getString(char*s,char c,unsigned int* pos)
     rta[k] = '\0';
     if (s[i] == ';')
         *pos = i-1;
-    else *pos = i;
+    else 
+        *pos = i;
     return rta;
 }
 
 
-//Recorro la linea del file y lo voy almacenando en el ADT
-//Retorna 0 si no hay memoria,1 si la linea no es una serie y tampoco una pelicula
-//Retorna 2 si se se añadio correctamente
+/*
+Recorro la linea del file y lo voy almacenando en el ADT
+Retorna 0 si no hay memoria,1 si la linea no es una serie ni una pelicula
+Retorna 2 si se se añadio correctamente al ADT
+*/
 int nextLine(LineADT line,FILE*file)
 {
     //Hacemos un string de toda la linea que vamos a liberar al final
@@ -141,7 +156,6 @@ int nextLine(LineADT line,FILE*file)
     if(rta == 0)
         return 1;//Si no es ni pelicula ni serie,no me interesa almacenarlo
     line->titleType = rta;
-    
     //Paso al siguiente campo de la linea
     //PrimaryTitle
     char *token;
@@ -149,7 +163,6 @@ int nextLine(LineADT line,FILE*file)
     int ok = allocString(&line->primaryTitle,token);
     if(ok == NO_MEM)
         return NO_MEM;
-        
     //startYear
     TOKENIZE(token,";");
     line->startYear = atoi(token);
@@ -199,11 +212,13 @@ static void freeRec(TList list)
     if(list == NULL)
         return;
     freeRec(list->tail);
-    //free(list->genre);
+    free(list->genre);
     free(list);
 }
 
-//Libero la linea en la que estoy parado
+/*
+Libero la linea en la que estoy parado
+*/
 void freeLine(LineADT line)
 {//Tengo que hacer un if a cada campo que se le pudo haber asignado memoria 
     if(line->primaryTitle != NULL)
@@ -212,9 +227,14 @@ void freeLine(LineADT line)
         freeRec(line->firstGenre);
     if(line->averageRating != NULL)
         free(line->averageRating);
+    line->primaryTitle = NULL;//Lo seteo en NULL para la siguiente iteracion
+    line->firstGenre = NULL;//de la linea del archivo
+    line->averageRating = NULL;
 }
 
-//Libero todo el struct
+/*
+Libero todo el struct
+*/
 void freeLineADT(LineADT line)
 {
     free(line);
