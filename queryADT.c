@@ -90,10 +90,10 @@ static TGeneros addGenRec(TGeneros first,TList new, int *ok){
     int c;
     if (new==NULL)
         return first;
-    if (first==NULL||(c=strcmp(new->genero,first->nameGenero))<0){
+    if (first==NULL||(c=strcmp(new->genre,first->nameGenero))<0){
         TGeneros aux=calloc(1,sizeof(Generos));
         int ultimo;
-        aux->nameGenero=copy(first->nameGenero,0,new->genero,&ultimo);//uso copy ya que me crea memoria y copia la string en una pasada
+        aux->nameGenero=copy(first->nameGenero,0,new->genre,&ultimo);//uso copy ya que me crea memoria y copia la string en una pasada
         if (first->nameGenero!=NULL)
             *ok=1;
         else{
