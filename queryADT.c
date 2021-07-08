@@ -93,7 +93,6 @@ static TGeneros addGenRec(TGeneros first,TList new, int *ok){
         return first;
     if (first==NULL||(c=strcmp(new->genre,first->nameGenero))<0){
         TGeneros aux=calloc(1,sizeof(Generos));
-        int ultimo;
         aux->nameGenero=new->genre;
         aux->cantGen++;
         aux->tail=addGenRec(aux->tail,new->tail,ok);
