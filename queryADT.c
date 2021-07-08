@@ -38,7 +38,7 @@ typedef struct year{
 
 typedef Year *Tyear;
 
-typedef struct queryCDT{
+struct queryCDT{
     Tyear startYear;
     Tyear currentYear;
 };
@@ -48,16 +48,16 @@ static char * copy(char * str, int pos, char * source, int * newPos ){
     int i = pos,j;
     if (source == NULL) return NULL;
     str = realloc(str, (i+BLOCK));
-    if (str = NULL)  return NULL;
+    if (str == NULL)  return NULL;
     for (j = 0; source[j] != '\0'; j++, i++){
         if (i % BLOCK == 0){
             str = realloc(str, (i+BLOCK));
-            if (str = NULL) return NULL;
+            if (str == NULL) return NULL;
         }
         str[i] = source[j];
     }
     str = realloc(str, i+1);
-    if (str = NULL) return NULL;
+    if (str == NULL) return NULL;
     *newPos = i;
     return str;
 }
@@ -95,6 +95,7 @@ static TGeneros addGenRec(TGeneros first,TList new, int *ok){
         first=addGenRec(first,new->tail);
     else
         first->tail=addGenRec(first->tail,new);
+    return first;
 }
 
 static void addNewMax(char **maxRating,char **maxName,unsigned int *maxVotes,char *rating,char *name,unsigned int votes){
@@ -183,28 +184,10 @@ static char * getSeries(queryADT query){
     return intAString(query->currentYear->cantSeries);
 }
 
-static char * copy(char * str, int pos, char * source, int * newPos ){
-    int i = pos,j;
-    if (source == NULL) return NULL;
-    str = realloc(str, (i+BLOCK));
-    if (str == NULL)  return NULL;
-    for (j = 0; source[j] != '\0'; j++, i++){
-        if (i % BLOCK == 0){
-            str = realloc(str, (i+BLOCK));
-            if (str == NULL) return NULL;
-        }
-        str[i] = source[j];
-    }
-    str = realloc(str, i+1);
-    if (str == NULL) return NULL;
-    *newPos = i;
-    return str;
-}
-
 char * getFilmsNSeries(queryADT query){
     int i;
     char * str = NULL;
-    str = copy(str, 0, getYear, &i);
+    str = copy(str, 0, getYear(query), &i);
     if (str == NULL)
         return NULL;
     str[i]=';';
@@ -226,7 +209,7 @@ char *getGenre(queryADT query){
     char * genres = NULL;
     char * s = NULL;
     while (iter != NULL){
-        genres = copy(genres, i, query->currentYear->year, &i);
+        genres = copy(genres, i, getYear(query), &i);
         if (genres == NULL)
             return NULL;
         genres[i]=';';
@@ -237,7 +220,7 @@ char *getGenre(queryADT query){
         genres = copy(genres, i+1,( s = intAString(iter->cantGen)), &i);
         if (genres == NULL) 
             return NULL;
-        genres[i] = '\n'
+        genres[i] = '\n';
         iter = iter->tail;
         i++;
         free(s);
@@ -253,7 +236,7 @@ char *getMostVoted(queryADT query){
     char * year;
     char * votesM;
     char * votesS;
-    res = copy(res, i, (year = intAString(year, query->currentYear->year)), &i);
+    res = copy(res, i, (year = intAString(query->currentYear->year)), &i);
     if (res == NULL)
         return NULL;
     res[i] = ';';
@@ -261,7 +244,7 @@ char *getMostVoted(queryADT query){
     if (res == NULL) 
         return NULL;
     res[i] = ';';
-    res = copy(res, i+1, (votesM = intAString(votesM, query->currentYear->query3->maxVotesP)), &i);
+    res = copy(res, i+1, (votesM = intAString(query->currentYear->query3->maxVotesP)), &i);
     if (res == NULL) 
         return NULL;
     res[i] = ';';
@@ -273,7 +256,7 @@ char *getMostVoted(queryADT query){
     if (res == NULL) 
         return NULL;
     res[i]=';';
-    res = copy(res, i+1, (votesS = intAString(votesS, query->currentYear->query3->maxVotesS)), &i);
+    res = copy(res, i+1, (votesS = intAString(query->currentYear->query3->maxVotesS)), &i);
     if (res == NULL) 
         return NULL;
     res[i]=';';
