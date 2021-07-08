@@ -114,7 +114,9 @@ static void addNewMax(char **maxRating,char **maxName,unsigned int *maxVotes,cha
 
 static Tyear addRec(Tyear year,char tipo,char *primaryTitle,unsigned int startYear,TList new,char *averageRating,unsigned int numVotes,int *ok){
     int c;
-
+    if(tipo!=MOVIE && tipo!=TV_SERIES){
+            return year;   //Si no es MOVIE ni TV_SERIES retorno como estaba
+        }
     if (year==NULL||(c=compare(startYear,year->year)>0)){
         Tyear aux=malloc(sizeof(Year));
         if (aux==NULL)
@@ -125,13 +127,10 @@ static Tyear addRec(Tyear year,char tipo,char *primaryTitle,unsigned int startYe
             aux->cantSeries=0;
             addNewMax(&aux->query3->maxRatingP,&aux->query3->nameMaxP,&aux->query3->maxVotesP,averageRating,primaryTitle,numVotes);
         }
-        else if (tipo==TV_SERIES){                  
+        else{                  
             aux->cantSeries=1;
             aux->cantPel=0;
             addNewMax(&aux->query3->maxRatingS,&aux->query3->nameMaxS,&aux->query3->maxVotesS,averageRating,primaryTitle,numVotes);
-        }
-        else{
-            return year;   //Si no es MOVIE ni TV_SERIES retorno como estaba
         }
         aux->first=addGenRec(aux->first,new,ok);
         aux->tail=year;
@@ -143,13 +142,11 @@ static Tyear addRec(Tyear year,char tipo,char *primaryTitle,unsigned int startYe
             if (year->query3->maxVotesP<numVotes)
                 addNewMax(&year->query3->maxRatingP,&year->query3->nameMaxP,&year->query3->maxVotesP,averageRating,primaryTitle,numVotes);
             }
-        else if (tipo==TV_SERIES){
+        else{
             year->cantSeries++;
             if (year->query3->maxVotesS<numVotes)
                 addNewMax(&year->query3->maxRatingS,&year->query3->nameMaxS,&year->query3->maxVotesS,averageRating,primaryTitle,numVotes);
         }
-        else
-            return year;
         year->first=addGenRec(year->first,new,ok);
     }
     else
