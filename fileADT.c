@@ -1,12 +1,14 @@
 #include "fileADT.h"
 #include <stdlib.h>
 #include <string.h>
-
+#include <ctype.h>
 #define BLOQUE 10
 #define MAX_DIGIT_YEAR 4
 #define MAX_RAITING_DIGIT 5
 #define MAX_LINE 250
 #define NO_MEM 0
+#define NOT_YEAR 4
+#define REACHED_EOF 3
 #define OK 1
 #define ADDED 2
 #define TOKENIZE(token,c) (token = strtok(NULL, c))
@@ -87,7 +89,7 @@ de generos
 */
 static TList addRec(TList list,char*s,int * ok)
 {
-    if(list == NULL ||strcmp(list->genre,s) < 0){
+    if(list == NULL ||strcmp(list->genre,s) > 0){
         TList new = malloc(sizeof(TNode));
         new->genre = s;//Le paso el puntero del string que esta en el heap
         *ok=OK;
@@ -138,11 +140,18 @@ int nextLine(LineADT line,FILE*file)
 {
     //Hacemos un string de toda la linea que vamos a liberar al final
     //de la funcion
+    int c = fgetc(file);
+    if (!hasNextLine(file)){
+        fprintf(stderr, "asd\n");
+        ungetc(c, file);
+        return REACHED_EOF;
+        }
+    ungetc(c, file);
     char *lineFile = malloc(MAX_LINE*sizeof(char));
     if(lineFile == NULL)
         return NO_MEM;
     fgets(lineFile,MAX_LINE,file);
-    lineFile =strtok(lineFile,";");
+    lineFile = strtok(lineFile,";");
 
     //titleType
     int rta = whatTitleType(lineFile);
@@ -162,6 +171,10 @@ int nextLine(LineADT line,FILE*file)
         return NO_MEM;
     //startYear
     TOKENIZE(token,";");
+    if (!isdigit(token[0])){
+        free(lineFile);
+        return NOT_YEAR;
+    }
     line->startYear = atoi(token);
 
       
