@@ -18,7 +18,7 @@ int main(int argc, char ** argv)
     queryADT list = newQuery();         // Creo estructura que tendra un puntero al primer nodo de una lista con los anios y sus respectivas peliculas
     unsigned int ok;
     // Recorro archivo csv de entrada
-    while (hasNextLine(linea, stream)){         // Mientras el archivo csv de entrada tenga una linea siguiente
+    while (hasNextLine(stream)){         // Mientras el archivo csv de entrada tenga una linea siguiente
         nextLine(linea, stream);       // Deposito en el struct apuntado por "linea" los datos de la primera linea del archivo csv de entrada
         ok = add(list, linea);        // Lleno con pelicula de la linea actual en el nodo de anio correspondiente. Si el nodo no existe lo agrego.
         if (ok == 0){
