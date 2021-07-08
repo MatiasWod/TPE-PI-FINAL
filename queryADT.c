@@ -43,6 +43,17 @@ struct queryCDT{
     Tyear currentYear;
 }queryCDT;
 
+static char * copy(char * str, int pos, char * source, int * newPos );
+static char *intAString(unsigned int num);
+static TGeneros addGenRec(TGeneros first,TList new, int *ok);
+static void addNewMax(char **maxRating,char **maxName,unsigned int *maxVotes,char *rating,char *name,unsigned int votes);
+static Tyear addRec(Tyear year,LineADT data,int *ok);
+static char *getYear(queryADT query);
+static char * getFilms(queryADT query);
+static char * getSeries(queryADT query);
+static void freeRecGenero(TGeneros first);
+static void freeRec(Tyear year);
+
 //reasigna memoria a str y copia source desde la posicion pos y devuelve donde termina el string en newPos
 static char * copy(char * str, int pos, char * source, int * newPos ){
     int i = pos,j;
@@ -91,13 +102,13 @@ static TGeneros addGenRec(TGeneros first,TList new, int *ok){
         }
         aux->nameGenero[ultimo]='\0';
         aux->cantGen++;
-        aux->tail=addGenRec(aux->tail,new->tail);
+        aux->tail=addGenRec(aux->tail,new->tail,ok);
         return aux;
     }
     if (c==0)
-        first=addGenRec(first,new->tail);
+        first=addGenRec(first,new->tail,ok);
     else
-        first->tail=addGenRec(first->tail,new);
+        first->tail=addGenRec(first->tail,new,ok);
     return first;
 }
 
@@ -142,12 +153,13 @@ static Tyear addRec(Tyear year,LineADT data,int *ok){
         }
         else{
             year->cantSeries++;
-            if (year->query3->maxVotesS<data->numVotes)
+            if (year->query3->maxVotesS<data->numVotes){
                 addNewMax(&year->query3->maxRatingS,&year->query3->nameMaxS,&year->query3->maxVotesS,data->averageRating,data->primaryTitle,data->numVotes);
                 if (year->query3->maxRatingS==0||year->query3->nameMaxS==0)
                     return NULL;
             }
             year->first=addGenRec(year->first,data->genres,ok);
+    }
     }
     else
         year->tail=addRec(year->tail,data,ok);   
@@ -157,7 +169,7 @@ static Tyear addRec(Tyear year,LineADT data,int *ok){
 //Agrega nueva pelicua/serie con sus datos y devuelve 1 si se pudo agregar y 0 si no pudo.
 unsigned int add(queryADT query,LineADT data){
     int ok=0;
-    query->startYear=(query->startYear,data,&ok);
+    query->startYear=addRec(query->startYear,data,&ok);
     return ok;
 }
 
