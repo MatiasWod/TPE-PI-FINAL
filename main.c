@@ -4,8 +4,8 @@
 
 int main(int argc, char ** argv)
 {
-    FILE * stream;                      // Inicializo puntero a FILE
-    unsigned int errors == checkArgs(argc, argv, stream); 
+    FILE * stream = fopen("imdbv3.csv", "rt");                   // Inicializo puntero a FILE
+    unsigned int errors = checkArgs(argc, argv, stream); 
     if (errors == 1){ 
 		printf("WRONG_ARG_COUNT: Debe recibir un solo argumento.");
 		return 1;
@@ -14,18 +14,18 @@ int main(int argc, char ** argv)
 		return 2;
     }
 
-    LineADT linea = newLine(stream);   // Recibo puntero a struct en el cual se depositaran los datos de la linea del csv
+    LineADT linea = newLine();   // Recibo puntero a struct en el cual se depositaran los datos de la linea del csv
     queryADT list = newQuery();         // Creo estructura que tendra un puntero al primer nodo de una lista con los anios y sus respectivas peliculas
-
+    unsigned int ok;
     // Recorro archivo csv de entrada
-    while (hasNextLine(linea)){         // Mientras el archivo csv de entrada tenga una linea siguiente
-        errors = nextLine(linea);       // Deposito en el struct apuntado por "linea" los datos de la primera linea del archivo csv de entrada
-        if (errors == 0){               // Si la variable de retorno del nextLine es 0, significa que no hay memoria suficiente para alocar en heap
-            printf("NO_MEM: No hay suficiente memoria en el heap.");
-            return 3;
+    while (hasNextLine(linea, stream)){         // Mientras el archivo csv de entrada tenga una linea siguiente
+        nextLine(linea, stream);       // Deposito en el struct apuntado por "linea" los datos de la primera linea del archivo csv de entrada
+        ok = add(list, linea);        // Lleno con pelicula de la linea actual en el nodo de anio correspondiente. Si el nodo no existe lo agrego.
+        if (ok == 0){
+          printf("NO_MEM: No hay suficiente memoria en el heap."); // Si la variable de retorno del nextLine es 0, significa que no hay memoria suficiente para alocar en heap
+          return 3;
         }
-        list = add(list, linea);        // Lleno con pelicula de la linea actual en el nodo de anio correspondiente. Si el nodo no existe lo agrego.
-        freeLine(line);                 // Libero los elementos del struct linea para depositar los datos de la siguiente linea del archivo csv
+        freeLine(linea);                 // Libero los elementos del struct linea para depositar los datos de la siguiente linea del archivo csv
     }
     // Creo archivos en los cuales guardar las respuestas de los query 1, 2 y 3
     FILE * queryOne = fopen("query1.csv", "w+t");
@@ -33,7 +33,7 @@ int main(int argc, char ** argv)
     FILE * queryThree = fopen("query3.csv", "w+t");
 
     // Seteo list en el primer nodo (anio mas chico) para recorrer
-    list = toBegin(list);
+    toBegin(list);
     while (hasNext(list)){              // Mientras haya un anio siguiente
         char * qOne = getFilmsNSeries(list);         // Agrego al query1.csv
         fputs(qOne, queryOne);
@@ -44,7 +44,7 @@ int main(int argc, char ** argv)
         char * qThree = getMostVoted(list);   // Agrego al query3.csv
         fputs(qThree, queryThree);
         fputc('\n', queryOne);
-        list = nextYear(list);                // Avanzo al proximo anio
+        nextYear(list);                // Avanzo al proximo anio
     }
 
     // Cierro archivos "abiertos"
@@ -55,7 +55,7 @@ int main(int argc, char ** argv)
     // Seteo list en primer nodo para liberar memoria
     toBegin(list);
     freeQuery(list);
-    freeLineADT(line);
+    freeLineADT(linea);
 
     return 0;
 }
