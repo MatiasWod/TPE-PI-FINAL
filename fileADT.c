@@ -2,15 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-
+#include "defines.h"
 
 #define MAX_LINE 250
-#define ADDED 0
-#define MOVIE 1
-#define TV_SERIES 2
-#define FATAL_ERROR 3
-#define NOT_YEAR 4
-#define NOT_TITLETYPE 5
 #define BLOCK 10
 #define TOKENIZE(token,c) (token = strtok(NULL, c))
 
@@ -82,7 +76,7 @@ static int allocString(char **target,char* source)
     if(*target == NULL)
         return FATAL_ERROR;
     (*target)[i] = '\0';
-    return ADDED;
+    return OK;
 }
 
 /*
@@ -120,10 +114,11 @@ retorna 0 si se se añadio correctamente al ADT.
 */
 int nextLine(LineADT line,FILE*file)
 {
+    /*Primero checkeamos que no estamos en EOF*/
     int c = fgetc(file);
     if (!hasNextLine(file)){
         ungetc(c, file);
-        return FATAL_ERROR;
+        return REACHED_EOF; // Si estamos en EOF, devuelve codigo de salida 8, 
     }
     ungetc(c, file);
     
@@ -177,6 +172,10 @@ int nextLine(LineADT line,FILE*file)
         int i = 0;
         unsigned int pos=0;
         line->genres = malloc(BLOCK*sizeof(char*));
+        if (line->genres == NULL){
+            free(lineFile);
+            return FATAL_ERROR;
+        }
         while(token[pos] != ';'){
             char *subToken = getString(token,',',&pos);
             pos+=1;
@@ -184,6 +183,10 @@ int nextLine(LineADT line,FILE*file)
             i++;
             if (i % BLOCK == 0){
                 line->genres = realloc(line->genres, (i+BLOCK)*sizeof(char*));
+                if (line->genres == NULL){
+                    free(lineFile);
+                    return FATAL_ERROR;
+                }
             }
         }
         line->genres[i] = NULL;
@@ -192,8 +195,10 @@ int nextLine(LineADT line,FILE*file)
     //averageRating
     TOKENIZE(token,";");
     ok = allocString(&line->averageRating,token);
-    if(ok == FATAL_ERROR)
+    if(ok == FATAL_ERROR){
+        free(lineFile);
         return FATAL_ERROR;
+    }
 
     //numVotes
     TOKENIZE(token,";");
@@ -201,7 +206,7 @@ int nextLine(LineADT line,FILE*file)
 
     //Libero el string donde se almaceno la linea donde estoy parado en el file
     free(lineFile);
-    return ADDED;
+    return OK;
 }
 
 /*
@@ -220,7 +225,7 @@ char *getPrimaryTitle(LineADT line)
 {
     char *rta = NULL;
     int ok = allocString(&rta,line->primaryTitle);
-    if(ok == ADDED)
+    if(ok == OK)
         return rta;
     else
         return NULL;
@@ -249,7 +254,7 @@ char * getAverageRating(LineADT line)
 {
     char *rta = malloc(sizeof(char));
     int ok = allocString(&rta,line->averageRating);
-    if(ok == ADDED)
+    if(ok == OK)
         return rta;
     return NULL;
 }

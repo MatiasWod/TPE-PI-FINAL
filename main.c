@@ -1,15 +1,7 @@
-#include "func.h"
+
 #include "fileADT.h"
 #include "queryADT.h"
-
-/*Constantes simbolicas*/
-#define FORMATO_QUERY_1 ("year;films;series")
-#define FORMATO_QUERY_2 ("year;genre;films")
-#define FORMATO_QUERY_3 ("startYear;film;votesFilm;ratingFilm;serie;votesSerie;ratingSerie")
-#define FATAL_ERROR 3
-#define OK 0
-#define WRONG_ARG_COUNT 1
-#define FILE_NOT_FOUND 2
+#include "defines.h"
 
 /*Prototipos de funciones*/
 FILE * genOutputFile(char * filename, char * mode, char * formatoQuery);
@@ -18,14 +10,13 @@ FILE * genOutputFile(char * filename, char * mode, char * formatoQuery);
 int main(int argc, char ** argv)
 {
     FILE * stream = fopen(argv[1], "rt");
-    unsigned int errors = checkArgs(argc, argv, stream); 
-    if (errors == WRONG_ARG_COUNT){ 
-		  printf("WRONG_ARG_COUNT: Debe recibir un solo argumento.\n");
-		  return WRONG_ARG_COUNT;
-    } 
-    else if (errors == FILE_NOT_FOUND) {
-		  printf("FILE_NOT_FOUND: El archivo no existe.\n");
-		  return FILE_NOT_FOUND;
+    if (argc != 2){
+      fprintf(stderr, "WRONG_ARG_COUNT: Debe recibir un solo argumento.\n");             // Solo debe haber un argumento (sumado al nombre del archivo a ejecutar)
+	    return WRONG_ARG_COUNT;                                                            // Si hay mas de un argumento devuelvo codigo de error 1
+    }                                                                                    // "Abro" archivo si existe, si no existe devuelve NULL
+    if (stream == NULL){
+		  fprintf(stderr, "FILE_NOT_FOUND: El archivo no existe.\n");                        // Si no existe el archivo devuelvo codigo de error 2
+      return FILE_NOT_FOUND;
     }
 
     /*
@@ -33,12 +24,12 @@ int main(int argc, char ** argv)
     */
     LineADT linea = newLine();
     if(linea == NULL){
-      printf("FATAL_ERROR: No hay suficiente memoria en el heap.\n");
+      fprintf(stderr, "FATAL_ERROR: No hay suficiente memoria en el heap.\n");
       return FATAL_ERROR;
     }
     queryADT list = newQuery();
     if(list == NULL){
-      printf("FATAL_ERROR: No hay suficiente memoria en el heap.\n");
+      fprintf(stderr, "FATAL_ERROR: No hay suficiente memoria en el heap.\n");
       return FATAL_ERROR;
     }
 
@@ -49,12 +40,22 @@ int main(int argc, char ** argv)
     ni tome algo que sea distinto de los titleType que queremos.
     */
     unsigned int ok, flag = 0;
-    while (flag != FATAL_ERROR){
+    while (flag != FATAL_ERROR && flag != REACHED_EOF){
         flag = nextLine(linea, stream);
+        if (flag == FATAL_ERROR){
+          freeQuery(list);
+          freeLine(linea);
+          freeLineADT(linea);
+          fprintf(stderr, "FATAL_ERROR: No hay suficiente memoria en el heap.\n");
+          return FATAL_ERROR;
+        }
         if (flag == OK){
           ok = add(list, linea);
           if (ok == FATAL_ERROR){
-            printf("FATAL_ERROR: No hay suficiente memoria en el heap.\n");
+            freeLine(linea);
+            freeLineADT(linea);
+            freeQuery(list);
+            fprintf(stderr, "FATAL_ERROR: No hay suficiente memoria en el heap.\n");
             return FATAL_ERROR;
           }
         }
@@ -73,19 +74,41 @@ int main(int argc, char ** argv)
     en los archivos de queries correspondientes. Libreando cada string despues
     de agregarlo a los archivos.
     */
+
+    char * qOne;
+    char * qTwo;
+    char * qThree;
+
     toBegin(list);
     while (hasNext(list)){
-        char * qOne = getFilmsNSeries(list);
+        qOne = getFilmsNSeries(list);
+        if (qOne == NULL){
+          freeLineADT(linea);
+          freeQuery(list);
+          fprintf(stderr, "FATAL_ERROR: No hay suficiente memoria en el heap.\n");
+          return FATAL_ERROR;
+        }
         fputs(qOne, queryOne);
         fputc('\n', queryOne);
         free(qOne);
-        char * qTwo = getGenre(list);
-        if (qTwo != NULL ){
+        qTwo = getGenre(list);
+        if (qTwo == NULL){
+          freeLineADT(linea);
+          freeQuery(list);
+          fprintf(stderr, "FATAL_ERROR: No hay suficiente memoria en el heap.\n");
+          return FATAL_ERROR;
+        }else{
           fputs(qTwo, queryTwo);
           fputc('\n', queryTwo);
           free(qTwo);
+        } 
+        qThree = getMostVoted(list);
+        if (qThree == NULL){
+          freeLineADT(linea);
+          freeQuery(list);
+          fprintf(stderr, "FATAL_ERROR: No hay suficiente memoria en el heap.\n");
+          return FATAL_ERROR;
         }
-        char * qThree = getMostVoted(list);
         fputs(qThree, queryThree);
         fputc('\n', queryThree);
         nextYear(list);
@@ -101,6 +124,7 @@ int main(int argc, char ** argv)
     fclose(queryOne);
     fclose(queryTwo);
     fclose(queryThree);
+    printf("Ha finalizado la ejecucion con exito.\n");
     return 0;
 }
 

@@ -9,8 +9,8 @@
 #define NOT_TITLETYPE 5
 #define WRONG_ARG_COUNT 6
 #define FILE_NOT_FOUND 7
+#define REACHED_EOF 8
 #define FORMATO_QUERY_1 ("year;films;series")
 #define FORMATO_QUERY_2 ("year;genre;films")
 #define FORMATO_QUERY_3 ("startYear;film;votesFilm;ratingFilm;serie;votesSerie;ratingSerie")
-
 #endif
