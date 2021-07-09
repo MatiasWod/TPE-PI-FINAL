@@ -6,6 +6,8 @@
 #include <string.h>
 #define BLOCK 10
 
+#define BLOCK 10
+
 //Para almacenar la pelicula/serie con mas votos. Estructura especifica para el query3
 typedef struct Q3{
     unsigned int maxVotesP;     //La pelicula con mas rating (real con un decimal)

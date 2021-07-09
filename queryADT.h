@@ -3,6 +3,7 @@
 
 #include "fileADT.h"
 #include <stdlib.h>
+#include "defines.h"
 
 typedef struct queryCDT *queryADT;
 

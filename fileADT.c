@@ -4,12 +4,14 @@
 #include <ctype.h>
 
 
-#define BLOQUE 10
 #define MAX_LINE 250
+#define ADDED 0
+#define MOVIE 1
+#define TV_SERIES 2
 #define FATAL_ERROR 3
 #define NOT_YEAR 4
 #define NOT_TITLETYPE 5
-#define ADDED 0
+#define BLOCK 10
 #define TOKENIZE(token,c) (token = strtok(NULL, c))
 
 
@@ -68,8 +70,8 @@ static int allocString(char **target,char* source)
 {
     unsigned int i=0;
     while(source[i] != '\0'){
-        if(i % BLOQUE == 0){
-            *target = realloc(*target,(i+BLOQUE)*sizeof(char));
+        if(i % BLOCK == 0){
+            *target = realloc(*target,(i+BLOCK)*sizeof(char));
             if(*target == NULL)
                 return FATAL_ERROR;
         }
@@ -91,12 +93,12 @@ o NULL. Ademas, en "pos" dejo hasta donde recorrio el string "s".
 static char * getString(char*s,char c,unsigned int* pos)
 {
     unsigned int i=*pos,k=0;
-    char * rta = malloc((k+BLOQUE)*sizeof(char));
+    char * rta = malloc((k+BLOCK)*sizeof(char));
     if(rta == NULL)
         return NULL;
     while(s[i] != c && s[i] != ';'){
-        if(k % BLOQUE == 0 && k!= 0){
-            rta = realloc(rta,(k+BLOQUE)*sizeof(char));
+        if(k % BLOCK == 0 && k!= 0){
+            rta = realloc(rta,(k+BLOCK)*sizeof(char));
             if(rta == NULL)
                 return NULL;
         }
@@ -174,14 +176,14 @@ int nextLine(LineADT line,FILE*file)
     if(line->titleType == MOVIE){
         int i = 0;
         unsigned int pos=0;
-        line->genres = malloc(BLOQUE*sizeof(char*));
+        line->genres = malloc(BLOCK*sizeof(char*));
         while(token[pos] != ';'){
             char *subToken = getString(token,',',&pos);
             pos+=1;
             line->genres[i] = subToken;
             i++;
-            if (i % BLOQUE == 0){
-                line->genres = realloc(line->genres, (i+BLOQUE)*sizeof(char*));
+            if (i % BLOCK == 0){
+                line->genres = realloc(line->genres, (i+BLOCK)*sizeof(char*));
             }
         }
         line->genres[i] = NULL;
