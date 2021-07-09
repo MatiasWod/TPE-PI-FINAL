@@ -64,9 +64,9 @@ int main(int argc, char ** argv)
     /*
     Creo archivos en los cuales se van a guardar las respuestas de los query 1, 2 y 3
     */
-    FILE * queryOne = genOutputFile("query1.txt", "w+t", FORMATO_QUERY_1);
-    FILE * queryTwo = genOutputFile("query2.txt", "w+t", FORMATO_QUERY_2);
-    FILE * queryThree = genOutputFile("query3.txt", "w+t", FORMATO_QUERY_3);
+    FILE * queryOne = genOutputFile("query1.csv", "w+t", FORMATO_QUERY_1);
+    FILE * queryTwo = genOutputFile("query2.csv", "w+t", FORMATO_QUERY_2);
+    FILE * queryThree = genOutputFile("query3.csv", "w+t", FORMATO_QUERY_3);
 
     /*
     Seteo list para recorrer la lista de años e ir guardando los queries
@@ -101,7 +101,6 @@ int main(int argc, char ** argv)
     fclose(queryOne);
     fclose(queryTwo);
     fclose(queryThree);
-    puts("OK");
     return 0;
 }
 
