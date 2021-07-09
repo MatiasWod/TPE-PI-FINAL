@@ -1,7 +1,7 @@
 #ifndef defines_h
 #define defines_h
 
-#define ADDED 0
+#define OK 0
 #define MOVIE 1
 #define TV_SERIES 2
 #define FATAL_ERROR 3
