@@ -63,8 +63,8 @@ unsigned int getStartYear(LineADT line);
 Devuelve una copia del primer nodo de la lista o NULL si no se pudo
 alocar memoria correctamente
 */
-TList getFirstGenre (LineADT line);
-
+// TList getFirstGenre (LineADT line);
+char **getFirstGenre (LineADT line);
 /*
 Devuelve un string del averageRating de la linea del file
 Retorna el puntero a la copia o NULL si no se pudo alocar memoria correctamente
