@@ -3,11 +3,11 @@
 
 _imdb es un programa que obtenido un dataset de imdb.com devuelve diferentes querys._
 
-Hasta la fecha las imdb devuelve las siguientes querys:
+Hasta la fecha imdb devuelve las siguientes querys:
 
-    * query1.csv->Cantidad de peliculas y series por anio.
-    * query2.csv->Cantidad de peliculas por anio y genero.
-    * query3.csv->La pelicula y la serie con mas votos de cada anio.
+    - query1.csv->Cantidad de peliculas y series por anio.
+    - query2.csv->Cantidad de peliculas por anio y genero.
+    - query3.csv->La pelicula y la serie con mas votos de cada anio.
 
 
 ## Pre-requisitos
