@@ -1,31 +1,60 @@
 #ifndef __query__h
 #define __query__h
+
 #include "fileADT.h"
 #include <stdlib.h>
+
 typedef struct queryCDT *queryADT;
 
-// static int compare(unsigned int year1,unsigned int year2){
-//         return ((int)year1-(int)year2);
-// }
+/*
+Crea un nuevo adt. Devuelve un puntero al struct y NULL si no pudo
+alocar memoria para el adt.
+*/
+queryADT newQuery(void);
 
-queryADT newQuery(void);//Crea la query vacia
+/*
+Agrega nueva pelicua/serie con sus datos y devuelve 1 si se pudo agregar
+y 0 si no pudo.
+*/
+unsigned int add(queryADT query,LineADT data);
 
-void printList(queryADT query);
+/*
+Verifica si hay un siguiente elemento en la lista
+*/
+unsigned int hasNext(queryADT query);
 
-unsigned int add(queryADT query,LineADT data);//Agrega nueva pelicua/serie con sus datos y devuelve 1 si se pudo agregar y 0 si no pudo.
+/*
+Hace que el iterador apunte al principio de la lista de años
+*/
+void toBegin(queryADT query);
 
-unsigned int hasNext(queryADT query);//Verifica si hay un siguiente elemento
+/*
+Avanza el iterador al siguiente año
+*/
+void nextYear(queryADT query);
 
-void toBegin(queryADT query);//Resetea el iterador
+/*
+Devuelve la cantidad de peliculas y series en un año en formato de string:
+"year;films;series".
+*/
+char * getFilmsNSeries(queryADT query);
 
-void nextYear(queryADT query);//Avanza el iterador al siguiente anio
+/*
+Devuelve todos los generos de un año y cantidad de peliculas de cada genero en
+formato de string: "year;genre;film"
+*/
+char * getGenre(queryADT query);
 
-char * getFilmsNSeries(queryADT query); //Devuelve la cantidad de peliculas y series en un anio
+/*
+Devuelve en string la pelicula y la serie mas votada del current year
+en formato de string: 
+"startYear;film;votesFilm;ratingFilm;serie;votesSerie;ratingSerie".
+*/
+char * getMostVoted(queryADT query);
 
-char * getGenre(queryADT query);//todos los generos de un anio y cantidad de peliculas de cada genero, el vector tiene la cantidad de peliculas para cada genero
-
-char * getMostVoted(queryADT query);//devuelve en string la pelicula y la serie mas votada del current year en el siguiente formato: startYear;film;votesFilm;ratingFilm;serie;votesSerie;ratingSerie
-
-void freeQuery(queryADT query);//Libera las querys
+/*
+Libera el adt y sus campos
+*/
+void freeQuery(queryADT query);
 
 #endif
