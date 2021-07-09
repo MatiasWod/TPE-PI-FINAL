@@ -1,8 +1,10 @@
 #include "queryADT.h"
+#include "defines.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#define BLOCK 10
 
 #define BLOCK 10
 
@@ -15,14 +17,14 @@ typedef struct Q3{
     char *maxRatingS;
     char *nameMaxS;             //String con el nombre de la serie
 }Q3;
-
+typedef Q3 * TQ3;
 //Los generos tambien los vamos guardando en lista y agregamos en orden ascendente
 typedef struct generos{
     struct generos *tail;
     char *nameGenero; 
     unsigned int cantGen;//cantidad de generos por pelicula
 }Generos;
-
+typedef Generos *TGeneros;
 //Se guarda por orden descendente
 typedef struct year{
     unsigned int year;
@@ -32,23 +34,18 @@ typedef struct year{
     TQ3 query3;
     struct year *tail;
 }Year;
-
+typedef Year *Tyear;
 //El primer año(primer nodo de la lista) y el iterador de años(lista)
 struct queryCDT{
     Tyear startYear;
     Tyear currentYear;
 }queryCDT;
 
-/*Punteros a estructuras*/
-typedef Generos *TGeneros;
-typedef Q3 * TQ3;
-typedef Year *Tyear;
-
 /*Prototipos de funciones static*/
 static char * copy(char * str, int pos, char * source, int * newPos );
 static char *intAString(unsigned int num);
 static Tyear addRec(Tyear year,char tipo,char *primaryTitle,unsigned int startYear,char **new,char *averageRating,unsigned int numVotes,int *ok);
-static void addNewMax(char **maxRating,char **maxName,unsigned int *maxVotes,char *rating,char *name,unsigned int votes);
+static void addNewMax(char **maxRating,char **maxName,unsigned int *maxVotes,char *rating,char *name,unsigned int votes, int *ok);
 static char *getYear(queryADT query);
 static char * getFilms(queryADT query);
 static char * getSeries(queryADT query);
@@ -112,10 +109,10 @@ static TGeneros addGenRec(TGeneros first,char *new, int *ok){
     if (first==NULL||(c=strcmp(new,first->nameGenero))<0){
         TGeneros aux=calloc(1,sizeof(Generos));
         if (aux!=NULL)
-            *ok = 1;
+            *ok =FATAL_ERROR;
         else{
             *ok=0;
-            return NULL;
+            return first;
         }
         int i;
         aux->nameGenero=copy(aux->nameGenero,0, new, &i );
@@ -135,13 +132,22 @@ static TGeneros addGenRec(TGeneros first,char *new, int *ok){
 /*
 Agrega el nuevo maximo al struct, reemplazandolo  por el anterior
 */
-static void addNewMax(char **maxRating,char **maxName,unsigned int *maxVotes,char *rating,char *name,unsigned int votes){
+static void addNewMax(char **maxRating,char **maxName,unsigned int *maxVotes,char *rating,char *name,unsigned int votes,int *ok){
     int ultimo;
     *maxRating = copy(*maxRating,0,rating, &ultimo );
+    if (*maxRating==NULL){
+        *ok=FATAL_ERROR;
+        return;
+    }
     (*maxRating)[ultimo]='\0';
     *maxName = copy(*maxName,0,name, &ultimo );
+    if (*maxName==NULL){
+        *ok=FATAL_ERROR;
+        return;
+    }
     (*maxName)[ultimo]='\0';
     *maxVotes = votes;
+    *ok=0;
     return;
 }
 
@@ -162,7 +168,9 @@ static Tyear addRec(Tyear year,char tipo,char *primaryTitle,unsigned int startYe
         if (tipo==MOVIE){
             aux->cantPel=1;
             aux->cantSeries=0;
-            addNewMax(&(aux->query3->maxRatingP),&(aux->query3->nameMaxP),&(aux->query3->maxVotesP),averageRating,primaryTitle,numVotes);
+            addNewMax(&(aux->query3->maxRatingP),&(aux->query3->nameMaxP),&(aux->query3->maxVotesP),averageRating,primaryTitle,numVotes,ok);
+            if (*ok==FATAL_ERROR)
+                return year;
             for (int i=0;new[i]!=NULL;i++){
                 aux->first=addGenRec(aux->first,new[i],ok);
             }
@@ -170,8 +178,10 @@ static Tyear addRec(Tyear year,char tipo,char *primaryTitle,unsigned int startYe
         else{                  
             aux->cantSeries=1;
             aux->cantPel=0;
-            addNewMax(&aux->query3->maxRatingS,&aux->query3->nameMaxS,&aux->query3->maxVotesS,averageRating,primaryTitle,numVotes);
+            addNewMax(&aux->query3->maxRatingS,&aux->query3->nameMaxS,&aux->query3->maxVotesS,averageRating,primaryTitle,numVotes,ok);
         }
+        if (*ok==FATAL_ERROR)
+            return year;
         aux->tail=year;
         return aux;
     }
@@ -180,13 +190,15 @@ static Tyear addRec(Tyear year,char tipo,char *primaryTitle,unsigned int startYe
             year->cantPel++;
             for (int i=0;new[i]!=NULL;i++)
                 year->first=addGenRec(year->first,new[i],ok);
+            if (*ok==FATAL_ERROR)
+                return year;
             if (year->query3->maxVotesP<numVotes)
-                addNewMax(&year->query3->maxRatingP,&year->query3->nameMaxP,&year->query3->maxVotesP,averageRating,primaryTitle,numVotes);
+                addNewMax(&year->query3->maxRatingP,&year->query3->nameMaxP,&year->query3->maxVotesP,averageRating,primaryTitle,numVotes,ok);
             }
         else{
             year->cantSeries++;
             if (year->query3->maxVotesS<numVotes)
-                addNewMax(&year->query3->maxRatingS,&year->query3->nameMaxS,&year->query3->maxVotesS,averageRating,primaryTitle,numVotes);
+                addNewMax(&year->query3->maxRatingS,&year->query3->nameMaxS,&year->query3->maxVotesS,averageRating,primaryTitle,numVotes,ok);
         }
     }
     else if (c < 0)
@@ -213,8 +225,6 @@ unsigned int add(queryADT query,LineADT data){
     query->startYear=addRec(query->startYear,tipo,primaryTitle,startYear,new,averageRating,numVotes,&ok);
     free(primaryTitle);
     free(averageRating);
-    if (query->startYear == NULL)
-        return 3;
     return ok;
 }
 
