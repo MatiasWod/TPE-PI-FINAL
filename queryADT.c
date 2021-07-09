@@ -109,9 +109,9 @@ static TGeneros addGenRec(TGeneros first,char *new, int *ok){
     if (first==NULL||(c=strcmp(new,first->nameGenero))<0){
         TGeneros aux=calloc(1,sizeof(Generos));
         if (aux!=NULL)
-            *ok =FATAL_ERROR;
+            *ok =0;
         else{
-            *ok=0;
+            *ok=FATAL_ERROR;
             return first;
         }
         int i;
