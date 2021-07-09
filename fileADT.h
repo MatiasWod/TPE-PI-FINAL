@@ -7,11 +7,6 @@
 
 typedef struct line* LineADT;
 
-typedef struct node{
-    char *genre;
-    struct node * tail;
-}TNode;
-
 typedef struct node * TList;
 
 /*
