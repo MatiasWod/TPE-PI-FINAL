@@ -3,8 +3,11 @@
 
 #include <stdio.h>
 
+/*Constantes simbolicas*/
 #define MOVIE 1
 #define TV_SERIES 2
+#define BLOCK 10
+#define FATAL_ERROR 3
 
 typedef struct line* LineADT;
 
