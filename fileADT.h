@@ -7,13 +7,6 @@
 
 typedef struct line* LineADT;
 
-typedef struct node{
-    char *genre;
-    struct node * tail;
-}TNode;
-
-typedef struct node * TList;
-
 /*
 Creo un nuevo adt. Devuelve un puntero al struct y NULL si no pudo
 alocar memoria para el adt.
