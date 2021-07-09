@@ -1,5 +1,6 @@
 #ifndef __fileADT__h
 #define __fileADT__h
+
 #include <stdio.h>
 
 #define MOVIE 1
@@ -66,7 +67,7 @@ y les asigna NULL a cada puntero para la siguiente iteracion del LineADT.
 void freeLine(LineADT line);
 
 /*
-Libero el struct, sin liberar los campos.
+Libera el struct, sin liberar los campos.
 */
 void freeLineADT(LineADT line);
 
