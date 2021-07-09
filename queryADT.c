@@ -6,8 +6,6 @@
 #include <string.h>
 #define BLOCK 10
 
-#define BLOCK 10
-
 //Para almacenar la pelicula/serie con mas votos. Estructura especifica para el query3
 typedef struct Q3{
     unsigned int maxVotesP;     //La pelicula con mas rating (real con un decimal)
@@ -159,11 +157,15 @@ static Tyear addRec(Tyear year,char tipo,char *primaryTitle,unsigned int startYe
     int c;
     if (year==NULL||(c=(int)startYear-year->year )>0){
         Tyear aux=calloc(1, sizeof(Year));
-        if (aux==NULL)
-            return NULL;
+        if (aux==NULL){
+            *ok=FATAL_ERROR;
+            return year;
+        }
         aux->query3=calloc(1, sizeof(struct Q3));
-        if (aux->query3==NULL)
-            return NULL;
+        if (aux->query3==NULL){
+            *ok=FATAL_ERROR;
+            return year;
+        }
         aux->year=startYear; 
         if (tipo==MOVIE){
             aux->cantPel=1;
