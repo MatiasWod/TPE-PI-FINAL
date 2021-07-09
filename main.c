@@ -1,79 +1,117 @@
 #include "func.h"
 #include "fileADT.h"
 #include "queryADT.h"
+
+/*Constantes simbolicas*/
 #define FORMATO_QUERY_1 ("year;films;series")
 #define FORMATO_QUERY_2 ("year;genre;films")
 #define FORMATO_QUERY_3 ("startYear;film;votesFilm;ratingFilm;serie;votesSerie;ratingSerie")
+#define FATAL_ERROR 3
+#define OK 0
+#define WRONG_ARG_COUNT 1
+#define FILE_NOT_FOUND 2
+
+/*Prototipos de funciones*/
+FILE * genOutputFile(char * filename, char * mode, char * formatoQuery);
+
 
 int main(int argc, char ** argv)
 {
-    FILE * stream = fopen(argv[1], "rt");                   // Inicializo puntero a FILE
+    FILE * stream = fopen(argv[1], "rt");
     unsigned int errors = checkArgs(argc, argv, stream); 
-    if (errors == 1){ 
-		printf("WRONG_ARG_COUNT: Debe recibir un solo argumento.\n");
-		return 1;
-    } else if (errors == 2) {
-		printf("FILE_NOT_FOUND: El archivo no existe.\n");
-		return 2;
+    if (errors == WRONG_ARG_COUNT){ 
+		  printf("WRONG_ARG_COUNT: Debe recibir un solo argumento.\n");
+		  return WRONG_ARG_COUNT;
+    } 
+    else if (errors == FILE_NOT_FOUND) {
+		  printf("FILE_NOT_FOUND: El archivo no existe.\n");
+		  return FILE_NOT_FOUND;
     }
 
-    LineADT linea = newLine();   // Recibo puntero a struct en el cual se depositaran los datos de la linea del csv
-    queryADT list = newQuery();         // Creo estructura que tendra un puntero al primer nodo de una lista con los anios y sus respectivas peliculas
+    /*
+    LLamo las funciones para  crear los TADs y verifico si fueron alocados en el heap
+    */
+    LineADT linea = newLine();
+    if(linea == NULL){
+      printf("FATAL_ERROR: No hay suficiente memoria en el heap.\n");
+      return FATAL_ERROR;
+    }
+    queryADT list = newQuery();
+    if(list == NULL){
+      printf("FATAL_ERROR: No hay suficiente memoria en el heap.\n");
+      return FATAL_ERROR;
+    }
+
+    /*
+    Recorro archivo csv de entrada depositando la informacion de la linea del file
+    en el TAD del fileADT y pasandosela a la funcion add del queryADT para guardarlo como
+    lista. Mientras no haya ningun error de alocacion de memoria
+    ni tome algo que sea distinto de los titleType que queremos.
+    */
     unsigned int ok, flag = 0;
-    // Recorro archivo csv de entrada
-    while (flag != 3){         // Mientras el archivo csv de entrada tenga una linea siguiente
-        flag = nextLine(linea, stream);       // Deposito en el struct apuntado por "linea" los datos de la primera linea del archivo csv de entrada
-        if (flag != 3 && flag != 4 ){
-          ok = add(list, linea);        // Lleno con pelicula de la linea actual en el nodo de anio correspondiente. Si el nodo no existe lo agrego.
-          if (ok == 3){
-            printf("NO_MEM: No hay suficiente memoria en el heap.\n"); // Si la variable de retorno del nextLine es 0, significa que no hay memoria suficiente para alocar en heap
-            return 3;
+    while (flag != FATAL_ERROR){
+        flag = nextLine(linea, stream);
+        if (flag == OK){
+          ok = add(list, linea);
+          if (ok == FATAL_ERROR){
+            printf("FATAL_ERROR: No hay suficiente memoria en el heap.\n");
+            return FATAL_ERROR;
           }
-          freeLine(linea);
-        }     // Libero los elementos del struct linea para depositar los datos de la siguiente linea del archivo csv
+        }
+        freeLine(linea);
     }
-    freeLine(linea);
-    // Creo archivos en los cuales guardar las respuestas de los query 1, 2 y 3
-    FILE * queryOne = fopen("query1.txt", "w+t");
-    fputs(FORMATO_QUERY_1, queryOne);
-    fputc('\n', queryOne);
-    FILE * queryTwo = fopen("query2.txt", "w+t");
-    fputs(FORMATO_QUERY_2, queryTwo);
-    fputc('\n', queryTwo);
-    FILE * queryThree = fopen("query3.txt", "w+t");
-    fputs(FORMATO_QUERY_3, queryThree);
-    fputc('\n', queryThree);
 
-    // Seteo list en el primer nodo (anio mas chico) para recorrer
+    /*
+    Creo archivos en los cuales se van a guardar las respuestas de los query 1, 2 y 3
+    */
+    FILE * queryOne = genOutputFile("query1.txt", "w+t", FORMATO_QUERY_1);
+    FILE * queryTwo = genOutputFile("query2.txt", "w+t", FORMATO_QUERY_2);
+    FILE * queryThree = genOutputFile("query3.txt", "w+t", FORMATO_QUERY_3);
+
+    /*
+    Seteo list para recorrer la lista de años e ir guardando los queries
+    en los archivos de queries correspondientes. Libreando cada string despues
+    de agregarlo a los archivos.
+    */
     toBegin(list);
-    while (hasNext(list)){              // Mientras haya un anio siguiente
-        char * qOne = getFilmsNSeries(list);         // Agrego al query1.csv
+    while (hasNext(list)){
+        char * qOne = getFilmsNSeries(list);
         fputs(qOne, queryOne);
         fputc('\n', queryOne);
         free(qOne);
-        char * qTwo = getGenre(list);          // Agrego al query2.csv
+        char * qTwo = getGenre(list);
         if (qTwo != NULL ){
           fputs(qTwo, queryTwo);
           fputc('\n', queryTwo);
           free(qTwo);
         }
-        char * qThree = getMostVoted(list);   // Agrego al query3.csv
+        char * qThree = getMostVoted(list);
         fputs(qThree, queryThree);
         fputc('\n', queryThree);
-        nextYear(list);                // Avanzo al proximo anio
+        nextYear(list);
         free(qThree);
     }
-    fprintf(stderr, "About to free\n");
-    // Cierro archivos "abiertos"
+
+    /*
+    Cierro los archivos abiertos.
+    */
     freeQuery(list);
     freeLineADT(linea);
-    fprintf(stderr, "Freed\n");
     fclose(stream);
     fclose(queryOne);
     fclose(queryTwo);
     fclose(queryThree);
-    // Seteo list en primer nodo para liberar memoria
-    // toBegin(list);
     puts("OK");
     return 0;
+}
+
+/*
+Abre el nombre del archivo que se le pasa por parametro de la funcion.
+Prepara
+*/
+FILE * genOutputFile(char * filename, char * mode, char * formatoQuery){
+  FILE * query = fopen(filename, mode);
+  fputs(formatoQuery, query);
+  fputc('\n', query);
+  return query;
 }

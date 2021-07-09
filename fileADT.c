@@ -2,45 +2,34 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+
+
 #define BLOQUE 10
-#define MAX_DIGIT_YEAR 4
-#define MAX_RAITING_DIGIT 5
 #define MAX_LINE 250
-#define NO_MEM 0
+#define FATAL_ERROR 3
 #define NOT_YEAR 4
-#define REACHED_EOF 3
-#define OK 1
-#define ADDED 2
+#define NOT_TITLETYPE 5
+#define ADDED 0
 #define TOKENIZE(token,c) (token = strtok(NULL, c))
 
-// typedef struct line{
-//     char titleType;         //1 si es pelicula 2 si es serie y 0 si no es ninguna de las dos.
-//     char * primaryTitle;    //el nombre de la pelicula/serie
-//     unsigned int startYear; // si es una película, el año. Si es una serie, en qué año comenzó a emitirse
-//     TList firstGenre;       //Hago una lista para guardar los generos.
-//     char* averageRating;    //un número entre 0 y 10, con un decimal(ver de dejarlo en un decimal)
-//     unsigned int numVotes;  // cantidad de votos que obtuvo
-// }LineCDT;
 
 typedef struct line{
     char titleType;         //1 si es pelicula 2 si es serie y 0 si no es ninguna de las dos.
-    char * primaryTitle;    //el nombre de la pelicula/serie
-    unsigned int startYear; // si es una película, el año. Si es una serie, en qué año comenzó a emitirse
-    char ** genres;       //Hago una lista para guardar los generos.
-    char* averageRating;    //un número entre 0 y 10, con un decimal(ver de dejarlo en un decimal)
-    unsigned int numVotes;  // cantidad de votos que obtuvo
+    char * primaryTitle;    //El nombre de la pelicula/serie.
+    unsigned int startYear; //Si es una película, el año que salio. Si es una serie, en qué año comenzó a emitirse
+    char ** genres;         //Una matriz para guardar los distintos generos.
+    char* averageRating;    //Un número entre 0 y 10, con un decimal del rating de la pelicula/serie.
+    unsigned int numVotes;  //Cantidad de votos que obtuvo la pelicula/serie.
 }LineCDT;
 
 //Prototipos de funciones static
 static int whatTitleType(char*s1);
 static int allocString(char **target,char* source);
-static TList addRec(TList list,char*s,int * ok);
-static void freeRec(TList list);
 static char * getString(char*s,char c,unsigned int* pos);
 
 /*
 Creo un nuevo adt. Devuelve un puntero al struct y NULL si no pudo
-alocar memoria para el adt
+alocar memoria para el adt.
 */
 LineADT newLine(void)
 {
@@ -51,7 +40,7 @@ LineADT newLine(void)
 /*
 Llamo a feof para ver si llegue al final del archivo.
 Devuelve algo distinto de 0 si tiene una linea siguiente y 0 si se llego
-al final del archivo
+al final del archivo.
 */
 int hasNextLine(FILE*file)
 {
@@ -60,20 +49,20 @@ int hasNextLine(FILE*file)
 
 /*
 Retorna 1 si es una pelicula, retorna 2 si es una tvSeries
- y 0 para cualquier otra cosa
- */
+y 0 en cualquier otro caso.
+*/
 static int whatTitleType(char*s1)
 {
     if(strcmp(s1,"movie")== 0)
         return MOVIE;
     else if(strcmp(s1,"tvSeries")==0)
         return TV_SERIES;
-    return 0;//Si es la primera linea o cualquier otro titleType retorno 0
+    return NOT_TITLETYPE;
 }
 
 /*
 Aloco memoria al heap para guardar un string y copio en target
-lo que tiene source. Retorno 1 si se copio correctamente y 0 sino.
+lo que tiene source. Retorno 0 si se copio correctamente y 3 sino.
 */
 static int allocString(char **target,char* source)
 {
@@ -82,48 +71,29 @@ static int allocString(char **target,char* source)
         if(i % BLOQUE == 0){
             *target = realloc(*target,(i+BLOQUE)*sizeof(char));
             if(*target == NULL)
-                return NO_MEM;
+                return FATAL_ERROR;
         }
         (*target)[i] = source[i];
         i++;
     }
     *target = realloc(*target,(i+1)*sizeof(char));
     if(*target == NULL)
-        return NO_MEM;
+        return FATAL_ERROR;
     (*target)[i] = '\0';
-    return OK;
+    return ADDED;
 }
 
 /*
-Agrego recursivamente un nodo que representa un genero a la lista
-de generos
-*/
-static TList addRec(TList list,char*s,int * ok)
-{
-    if(list == NULL ||strcmp(list->genre,s) > 0){
-        TList new = malloc(sizeof(TNode));
-        new->genre = s;//Le paso el puntero del string que esta en el heap
-        *ok=OK;
-        new->tail = list;
-        return new;
-    }
-    //else c < 0, entonces sigo recorriendo la lista
-    //No considero c==0 ya que estaria mal el formato del .csv
-    list->tail = addRec(list->tail,s,ok);
-    return list;
-}
-
-/*
-Devuelvo un string(alocado en el heap) que tiene copiado el string s
-a partir pos hasta la primera aparicion del caracter c o null. Ademas,
-en pos dejo hasta donde recorrio
+Devuelvo un string(alocado en el heap) que tiene copiado el string "s"
+a partir de la posicion "pos" hasta la primera aparicion del caracter c
+o NULL. Ademas, en "pos" dejo hasta donde recorrio el string "s".
 */
 static char * getString(char*s,char c,unsigned int* pos)
 {
-    unsigned int i=*pos,k=0;//Con uno itero el string y el string rta respectivamente
+    unsigned int i=*pos,k=0;
     char * rta = malloc((k+BLOQUE)*sizeof(char));
     if(rta == NULL)
-        return NULL;//Si no se pudo asignar memoria devuelvo NULL
+        return NULL;
     while(s[i] != c && s[i] != ';'){
         if(k % BLOQUE == 0 && k!= 0){
             rta = realloc(rta,(k+BLOQUE)*sizeof(char));
@@ -141,168 +111,72 @@ static char * getString(char*s,char c,unsigned int* pos)
     return rta;
 }
 
-
 /*
-Recorro la linea del file y lo voy almacenando en el ADT
-Retorna 0 si no hay memoria,1 si la linea no es una serie ni una pelicula
-Retorna 2 si se se añadio correctamente al ADT
+Recorro la linea del file y lo voy almacenando en el ADT. Retorna 3 si 
+no hay memoria, retorna 1 si la linea no es una serie ni una pelicula y
+retorna 0 si se se añadio correctamente al ADT. 
 */
-// int nextLine(LineADT line,FILE*file)
-// {
-//     //Hacemos un string de toda la linea que vamos a liberar al final
-//     //de la funcion
-//     int c = fgetc(file);
-//     if (!hasNextLine(file)){
-//         ungetc(c, file);
-//         return REACHED_EOF;
-//     }
-//     ungetc(c, file);
-//     char *lineFile = malloc(MAX_LINE*sizeof(char));
-//     if(lineFile == NULL)
-//         return NO_MEM;
-//     fgets(lineFile,MAX_LINE,file);
-//     lineFile = strtok(lineFile,";");
-//     //titleType
-//     int rta = whatTitleType(lineFile);
-//     if(rta == 0){
-//         line->titleType = rta;//Indico que en esta iteracion no hay ni una
-//         free(lineFile);//pelicula ni una serie
-//         return 1;//Si no es ni pelicula ni serie,no me interesa almacenarlo
-//     }
-        
-//     line->titleType = rta;
-//     //Paso al siguiente campo de la linea
-//     //PrimaryTitle
-//     char *token;
-//     TOKENIZE(token,";");
-//     if (token == NULL){
-//         return 3;    
-//     }
-//     int ok = allocString(&line->primaryTitle,token);
-//     if(ok == NO_MEM)
-//         return NO_MEM;
-//     //startYear
-//     if (token == NULL){
-//         return 3;    
-//     }
-//     TOKENIZE(token,";");
-//     if (token == NULL){
-//         return 3;    
-//     }
-//     if (!isdigit(token[0])){
-//         free(lineFile);
-//         return NOT_YEAR;
-//     }
-//     line->startYear = atoi(token);
-
-      
-//     //endYear, ignoro el campo ya que no lo uso
-//     TOKENIZE(token,";");
-//     if (token == NULL){
-//         return 3;    
-//     }
-//     //genres
-//     //Si es serie, ignoro esta iteracion de token, si es pelicula
-//     //guardo los generos en una lista
-//     TOKENIZE(token,";");
-//     if (token == NULL){
-//         return 3;    
-//     }
-//     if(line->titleType == MOVIE){
-//         unsigned int pos=0;
-//         while(token[pos] != ';'){
-//             char *subToken = getString(token,',',&pos);
-//             pos+=1;
-//             line->firstGenre = addRec(line->firstGenre,subToken,&ok);
-//             if(ok == NO_MEM)
-//                 return NO_MEM;
-//         }
-//     }
-    
- 
-//     //averageRating
-//     TOKENIZE(token,";");
-//     if (token == NULL){
-//         return 3;    
-//     }
-//     ok = allocString(&line->averageRating,token);
-//     if(ok == NO_MEM)
-//         return NO_MEM;
-
-//     //numVotes
-//     TOKENIZE(token,";");
-//     if (token == NULL){
-//         return 3;    
-//     }
-//     line->numVotes = atoi(token);
-
-//     //No recorro el resto de la linea ya que no es importante para estos
-//     //queries
-
-//     //Si llegue a esta instancia pude guardar sin problema en el tad
-//     //Libero el string donde se almaceno la linea donde estoy parado en el file
-//     free(lineFile);
-//     //Devuelvo added para indicar que se agrego correctamente
-//     return ADDED;
-// }
-
 int nextLine(LineADT line,FILE*file)
 {
-    //Hacemos un string de toda la linea que vamos a liberar al final
-    //de la funcion
+    int c = fgetc(file);
+    if (!hasNextLine(file)){
+        ungetc(c, file);
+        return FATAL_ERROR;
+    }
+    ungetc(c, file);
+    
+    /*Hacemos un string para guardar toda la linea del file*/
     char *lineFile = malloc(MAX_LINE*sizeof(char));
     if(lineFile == NULL)
-        return NO_MEM;
+        return FATAL_ERROR;
     fgets(lineFile,MAX_LINE,file);
     lineFile =strtok(lineFile,";");
 
     //titleType
     int rta = whatTitleType(lineFile);
-    if(rta == 0){
-        line->titleType = rta;//Indico que en esta iteracion no hay ni una
-        free(lineFile);//pelicula ni una serie
-        return 1;//Si no es ni pelicula ni serie,no me interesa almacenarlo
-    }
-        
+    if(rta == NOT_TITLETYPE){
+        line->titleType = rta;
+        free(lineFile);
+        return NOT_TITLETYPE;
+    }    
     line->titleType = rta;
-    //Paso al siguiente campo de la linea
+    
+    /*
+    Voy recorriendo y analizando los distintos
+    campos de la linea del file, unicamente analizando
+    los que son importantes para los queries.
+    */
+    
     //PrimaryTitle
     char *token;
     TOKENIZE(token,";");
     int ok = allocString(&line->primaryTitle,token);
-    if(ok == NO_MEM)
-        return NO_MEM;
+    if(ok == FATAL_ERROR)
+        return FATAL_ERROR;
+    
     //startYear
     TOKENIZE(token,";");
-    if(token == NULL)
-        return 3;
+    if(token == NULL){
+        free(lineFile);
+        return NOT_YEAR;
+    }
     if (!isdigit(token[0])){
         free(lineFile);
-        return 4;
+        return NOT_YEAR;
     }
     line->startYear = atoi(token);
       
-    //endYear, ignoro el campo ya que no lo uso
+    //endYear
     TOKENIZE(token,";");
     
     //genres
-    //Si es serie, ignoro esta iteracion de token, si es pelicula
-    //guardo los generos en una lista
     TOKENIZE(token,";");
-    // if(line->titleType == MOVIE){
-    //     int ok = allocString(&line->genres,token);
-    //     if(!ok)
-    //         return NO_MEM;
-    // }
-    // fprintf(stderr, "PASSt\n");
- 
     if(line->titleType == MOVIE){
         int i = 0;
         unsigned int pos=0;
         line->genres = malloc(BLOQUE*sizeof(char*));
         while(token[pos] != ';'){
             char *subToken = getString(token,',',&pos);
-            // fprintf(stderr, "%s\n", subToken);
             pos+=1;
             line->genres[i] = subToken;
             i++;
@@ -314,29 +188,22 @@ int nextLine(LineADT line,FILE*file)
     }
 
     //averageRating
-    if(token == NULL)
-        return 0;
     TOKENIZE(token,";");
     ok = allocString(&line->averageRating,token);
-    if(ok == NO_MEM)
-        return NO_MEM;
+    if(ok == FATAL_ERROR)
+        return FATAL_ERROR;
 
     //numVotes
     TOKENIZE(token,";");
     line->numVotes = atoi(token);
 
-    //No recorro el resto de la linea ya que no es importante para estos
-    //queries
-
-    //Si llegue a esta instancia pude guardar sin problema en el tad
     //Libero el string donde se almaceno la linea donde estoy parado en el file
     free(lineFile);
-    //Devuelvo added para indicar que se agrego correctamente
     return ADDED;
 }
 
 /*
-Devuelve el titleType del line en el que esta parado
+Devuelve el titleType del line en el que esta parado.
 */
 char getTitleType(LineADT line)
 {
@@ -345,19 +212,20 @@ char getTitleType(LineADT line)
 
 /*
 Devuelve una copia del string del primaryTitle
-Retorna el puntero a la copia o NULL si no se pudo alocar memoria correctamente
+Retorna el puntero a la copia o NULL si no se pudo alocar memoria correctamente.
 */
 char *getPrimaryTitle(LineADT line)
 {
     char *rta = NULL;
     int ok = allocString(&rta,line->primaryTitle);
-    if(ok)
+    if(ok == ADDED)
         return rta;
-    else return NULL;
+    else
+        return NULL;
 }
 
 /*
-Devuelve el startYear (en unsigned int) de la linea del file
+Devuelve el startYear (en unsigned int) de la linea del file.
 */
 unsigned int getStartYear(LineADT line)
 {
@@ -365,133 +233,58 @@ unsigned int getStartYear(LineADT line)
 }
 
 /*
-Devuelve una copia del primer nodo de la lista o NULL si no se pudo
-alocar memoria correctamente
+Devuelve la matriz de generos de la linea del file.
 */
-// TList getFirstGenre (LineADT line)
-// {
-//     TList rta = malloc(sizeof(TNode));
-//     if(rta == NULL)
-//         return NULL;
-//     rta->genre = line->firstGenre->genre;
-//     rta->tail = line->firstGenre->tail;
-//     return rta;
-// }
-
-char ** getFirstGenre(LineADT line){
+char ** getGenres(LineADT line){
     return line->genres;
 }
-static void swap(char * s1,char * s2)
-{
-    char * aux = s1;
-    s1 = s2;
-    s2 = aux;
-}
 
 /*
-Devuelve una matriz con los generos ordenados
-*/
-// char **getFirstGenre (LineADT line)
-// {
-//     unsigned int i=0;
-//     char **rta = malloc((BLOQUE)*sizeof(char*));
-//     unsigned int pos=0;
-//     fprintf(stderr, "PASS\n");
-//     while(line->genres[pos] != ';'){
-//         *rta[] = getString(line->genres,',',&pos);
-//         if(*rta == NULL)
-//             return NULL;
-//         pos+=1;
-//         i++;
-//         if(i%BLOQUE == 0){
-//             rta = realloc(rta,(i + BLOQUE)*sizeof(char *));
-//             if(rta == NULL)
-//                 return NULL;
-//         }
-//     }
-//     fprintf(stderr, "PASSw\n");
-//     rta = realloc(rta,(i)*sizeof(char *));
-//     rta[i] = NULL;//la ultima fila la hago NULL
-
-//     //Ahora ordeno la matriz
-//     unsigned int j,k;
-//     for(j=0;j < i;j++){
-//         for(k=0;k < i-j-1;k++){
-//             if(strcmp(rta[j],rta[j+1]) > 0){
-//                 //swap
-//                 swap(rta[j],rta[j+1]);
-//             }
-//         }
-//     }
-
-//     return rta;
-// }
-
-/*
-Devuelve un string del averageRating de la linea del file
-Retorna el puntero a la copia o NULL si no se pudo alocar memoria correctamente
+Devuelve un string del averageRating de la linea del file.
+Retorna el puntero a la copia o NULL si no se pudo alocar memoria correctamente.
 */
 char * getAverageRating(LineADT line)
 {
     char *rta = malloc(sizeof(char));
     int ok = allocString(&rta,line->averageRating);
-    if(ok)
+    if(ok == ADDED)
         return rta;
     return NULL;
 }
 
 /*
-Devuelve el numVotes(en unsigned int) de la linea del file
+Devuelve el numVotes(en unsigned int) de la linea del file.
 */
 unsigned int getNumVotes(LineADT line)
 {
     return line->numVotes;
 }
 
-// static void freeRec(TList list)
-// {
-//     if(list == NULL)
-//         return;
-//     freeRec(list->tail);
-//     free(list->genre);
-//     free(list);
-// }
-
 /*
-Libero la linea en la que estoy parado
+Libera los campos del struct que tienen alocada memoria en el heap
+y les asigna NULL a cada puntero para la siguiente iteracion del LineADT.
 */
-// void freeLine(LineADT line)
-// {//Tengo que hacer un if a cada campo que se le pudo haber asignado memoria 
-//     if(line->primaryTitle != NULL)
-//         free(line->primaryTitle);
-//     if(line->firstGenre != NULL)
-//         freeRec(line->firstGenre);
-//     if(line->averageRating != NULL)
-//         free(line->averageRating);
-//     line->primaryTitle = NULL;//Lo seteo en NULL para la siguiente iteracion
-//     line->firstGenre = NULL;//de la linea del archivo
-//     line->averageRating = NULL;
-// }
-
-void freeLine(LineADT line) //Tengo que hacer un if a cada campo que se le pudo haber asignado memoria 
+void freeLine(LineADT line) 
 {
-    int i=0;
-    if(line->primaryTitle != NULL)
+    if(line->primaryTitle != NULL){
         free(line->primaryTitle);
+        line->primaryTitle = NULL;
+    }
     if(line->genres != NULL){
+        int i=0;
         while (line->genres[i] != NULL)
             free(line->genres[i++]);
         free(line->genres);
+        line->genres = NULL;
     }
-    if(line->averageRating != NULL)
+    if(line->averageRating != NULL){
         free(line->averageRating);
-    line->primaryTitle = NULL;//Lo seteo en NULL para la siguiente iteracion
-    line->genres = NULL;//de la linea del archivo
-    line->averageRating = NULL;
+        line->averageRating = NULL;
+    }
 }
 
 /*
-Libero todo el struct
+Libero el struct, sin liberar los campos.
 */
 void freeLineADT(LineADT line)
 {

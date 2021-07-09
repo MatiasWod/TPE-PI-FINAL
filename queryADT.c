@@ -222,10 +222,8 @@ static Tyear addRec(Tyear year,char tipo,char *primaryTitle,unsigned int startYe
             aux->cantPel=1;
             aux->cantSeries=0;
             addNewMax(&(aux->query3->maxRatingP),&(aux->query3->nameMaxP),&(aux->query3->maxVotesP),averageRating,primaryTitle,numVotes);
-            // fprintf(stderr, "%d\n", startYear);
             for (int i=0;new[i]!=NULL;i++){
                 aux->first=addGenRec(aux->first,new[i],ok);
-                fprintf(stderr, "%s\n", new[i]);
             }
         }
         else{                  
@@ -239,7 +237,6 @@ static Tyear addRec(Tyear year,char tipo,char *primaryTitle,unsigned int startYe
     else if (c==0){ //si estoy en el mismo anio que data
         if (tipo==MOVIE){
             year->cantPel++;
-            // fprintf(stderr, "%d\n", startYear);
             for (int i=0;new[i]!=NULL;i++)
                 year->first=addGenRec(year->first,new[i],ok);
             if (year->query3->maxVotesP<numVotes)
@@ -264,7 +261,6 @@ static Tyear addRec(Tyear year,char tipo,char *primaryTitle,unsigned int startYe
 //         return 1;   //Si no es MOVIE ni TV_SERIES retorno como estaba
 //     }
 //     char *primaryTitle=getPrimaryTitle(data);
-//     // fprintf(stderr,"%s\n", primaryTitle);
 //     unsigned int startYear=getStartYear(data);
 //     TList new;
 //     if (tipo == MOVIE)
@@ -282,14 +278,11 @@ static Tyear addRec(Tyear year,char tipo,char *primaryTitle,unsigned int startYe
 unsigned int add(queryADT query,LineADT data){
     int ok=0;
     char tipo=getTitleType(data);
-    if(tipo!=MOVIE && tipo!=TV_SERIES){
-        return 1;   //Si no es MOVIE ni TV_SERIES retorno como estaba
-    }
-    char *primaryTitle=getPrimaryTitle(data);
+    char *primaryTitle=getPrimaryTitle(data); 
     unsigned int startYear=getStartYear(data);
     char **new;
     if (tipo == MOVIE)
-        new=getFirstGenre(data);
+        new=getGenres(data);
     else 
         new = NULL;
     char *averageRating=getAverageRating(data);
@@ -470,12 +463,10 @@ static void freeRec(Tyear year){
         return;
     freeRec(year->tail);
     freeRecGenero(year->first);
-    fprintf(stderr, "freeing\n");
     free(year->query3->maxRatingP);
     free(year->query3->maxRatingS);
     free(year->query3->nameMaxP);
     free(year->query3->nameMaxS);
-    fprintf(stderr, "freeing\n");
     free(year->query3);
     free(year);
 }
